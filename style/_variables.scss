@@ -1,0 +1,508 @@
+// @import 'cropperjs/dist/cropper.css';
+
+$base-color: #ff9933;
+// $base-color-tr: rgba(255, 153, 51, 0.5);
+$base-lite:#f5b030;
+$base-lite-2:#ffd68b;
+$base-lite-3:#ffebc6;
+$base-white:rgb(229, 229, 229);
+$back-white:#F6F3E4;
+$lite-gray: rgb(227, 227, 227);
+$back-lite-white:rgb(252, 252, 252);
+$back-tr-white:rgba(252, 252, 252, 0.95);
+$dark-blue: #1C254C;
+$middle-blue: #2b409f;
+$lite-blue: #5B759F;
+$dark-tr-blue:rgba(15, 24, 92, 0.5);
+$base-color-tr: rgba(255, 128, 0, 0.761);
+$buttongradient:linear-gradient(#FFD3CC 1%, #ff9933 40%);
+$background:linear-gradient(#5B759F,#1C254C);
+$background-bottom-right:linear-gradient(to bottom right, #5B759F,#1C254C);
+$back-gra-white: linear-gradient(to bottom right, #ffffff,#dddddd);;
+$back-gra-green: linear-gradient(to bottom right, #35fea4,#d7ffda);;
+$ORbackground: linear-gradient($base-lite,$base-color);
+$dull-red:rgb(255, 81, 81);
+$lite-dull-red:rgb(255, 143, 143);
+$dull-blue:rgb(56, 208, 251);
+$lite-dull-blue:rgb(157, 234, 255);
+
+
+// base
+
+body, div, dl, dt, dd, ul, ol, li,
+h1, h2, h3, h4, h5, h6,
+pre, code, form, fieldset, legend, input, textarea,
+p, blockquote, th, td {
+  margin: 0;
+  padding: 0;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+fieldset,
+img {
+  border: 0;
+}
+
+body{
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    // height: 100vh;
+    // width: 100vw;
+}
+
+
+
+// layout
+.l-wrapper{
+	top:0;
+	left: 0;
+	position: fixed;
+	background:rgba(0,0,0,0.7);
+	width:100vw;
+	height:100vh;
+	flex-direction: column;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.l-container{
+    // animation: l-container;
+	background: $back-gra-white;
+	border: solid $base-color;
+	border-radius: 0.5rem;
+	width: 90%;
+	max-width: 550px;
+	height: auto;
+	max-height: 950px;
+    overflow-y: scroll;
+}
+.main-wrapper{
+    max-width: 600px;
+    width: 100vw;
+}
+// .black-tr-background{
+//     top:0;
+// 	left: 0;
+// 	position: fixed;
+// 	background:rgba(0,0,0,0.7);
+// 	width:100vw;
+// 	height:100vh;
+// }
+.scroll-fixed{
+    position: fixed;
+    background: cover;
+    height: 100vh;
+    // overflow-x: hidden
+}
+// this is for loading bar centered
+.laoding-center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+// this is for question-list hover
+.question-list{
+    transition: 0.5s;
+}
+.question-list:hover{
+    // this is not working
+    background: $base-white;
+}
+
+// module
+.title-white{
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: inline-block;
+    border-bottom: 0.2rem solid $dark-blue;
+    margin-bottom: 0.5rem;
+}
+.title-black{
+    color: black;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.title-blue{
+    color: $middle-blue;
+    font-size: 1.5rem;
+    font-weight: bold;
+    
+}
+
+/* button */
+/* btn-backgroundcolor-textcolor-border-radius */
+
+.btn-base-white-db-sq{
+    display: inline-block;
+    background: $base-color;
+    color:white;
+    border: 0.1rem solid  $dark-blue;
+    border-radius: 0.5rem;
+    transition: 0.5s;
+}
+.btn-base-white-db-sq:hover{
+    color: $dark-blue;
+}
+.btn-base-black-db-sq{
+    background: $base-color;
+    color:rgb(0, 0, 0);
+    border: 0.1rem solid  $dark-blue;
+    border-radius: 0.5rem;
+}
+.btn-base-black-db-ov{
+    background: $base-color;
+    color:rgb(0, 0, 0);
+    border: 0.1rem solid  $dark-blue;
+    border-radius: 50vh;
+    transition: .5s;
+}
+.btn-base-black-db-ov:hover{
+    color: $lite-gray;
+}
+.btn-tr-black-sq{
+    background: none;
+    color:black;
+    border: 0.1rem solid  $base-color;
+    border-radius: 0.5rem;
+}
+.btn-tr-black-base-sq{
+    background: none;
+    color:black;
+    border: 0.1rem solid  $base-color;
+    border-radius: 0.5rem;
+    transition:0.3s;
+}
+// .btn-tr-black-base-sq:hover{
+//     background: $base-color;
+//     color:white;
+//     font-weight: bold;
+//     border: 0.1rem solid  darken($base-color,10%);
+//     }
+.btn-tr-white-base-sq{
+    background: none;
+    color:white;
+    border: 0.1rem solid  $base-color;
+    border-radius: 0.5rem;
+    transition:0.3s;
+}
+.btn-tr-white-base-sq:hover{
+    background: $base-color;
+    color:black;
+    font-weight: bold;
+    border: 0.1rem solid  darken($base-color,10%);
+}
+.btn-tr-white-base-cir{
+    background: none;
+    color:white;
+    border: 0.1rem solid  $base-color;
+    border-radius:50vh;
+    transition: 0.5s;
+}
+.btn-tr-white-base-cir:hover{
+    font-weight: bold;
+}
+.btn-tr-black-baselite-cir{
+    background: $base-lite;
+    color:black;
+    border: 0.1rem solid  $base-color;
+    border-radius:50vh;
+    transition: 0.5s
+}
+.btn-tr-black-baselite-cir:hover{
+    font-weight: bold;
+}
+.btn-gray-black-gray-sq{
+    background: rgb(230, 230, 230);
+    color:black;
+    font-weight: bold;
+    border: 0.1rem solid  gray;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: 0.5s;
+}
+.btn-gray-black-gray-sq:hover{
+    background: rgb(238, 238, 238);
+    color: gray;
+    border: 0.1rem solid $dark-blue
+}
+.btn-litegray-black-gray-sq{
+    background: rgb(247, 247, 247);
+    color:black;
+    font-weight: bold;
+    border: 0.1rem solid  gray;
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: 0.5s;
+}
+.btn-litegray-black-gray-sq:hover{
+    background: rgb(238, 238, 238);
+    color: gray;
+    border: 0.1rem solid $dark-blue
+}
+.btn-basegra-white-db-sq{
+    display: inline-block;
+    background: $buttongradient;
+    color:white;
+    border: 0.1rem solid  $dark-blue;
+    border-radius: 0.5rem;
+    transition: 0.5s;
+}
+.btn-basegra-white-db-sq:hover{
+    color: $dark-blue;
+}
+
+
+// close button
+// close-container:{close{ cross-icon}}
+.close-container{
+    // width: inherit;
+    // left:auto;
+    display: flex;
+    justify-content: flex-end;
+    .close{
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 0.2rem solid rgb(180, 179, 179);
+        border-radius: 50vh;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-top: 0.3rem;
+        margin-right: 0.3rem;
+        color: rgb(172, 172, 172);
+        transition: 0.5s;
+    }
+    .close:hover{
+        color: rgb(207, 207, 207);
+        border: 0.2rem solid rgb(207, 207, 207);
+    }
+}
+
+@media(min-width: 520px){
+    .close-container{
+        font-size: 1.5rem;
+        margin-top: 0.5rem;
+        margin-right: 0.5rem;
+        .close{
+            width: 2rem;
+            height: 2rem;
+        }
+    }
+
+}
+// this is for quiz next button
+
+.button-quiz-container{
+    display: flex;
+    margin-top: 1rem;
+    align-items: center;
+    div{
+        padding-top: 0.2rem;
+        padding-bottom: 0.2rem;
+        padding-right: 0.4rem;
+        padding-left: 0.4rem;
+    }
+}
+
+// input style
+input[type="text"]:focus {
+    outline: none;
+    }
+
+// notification
+// add notification to the css as a value like notification-blue below
+@keyframes notification {
+    0% {
+        transform: translate(0,3px);
+        opacity: 0;
+      }
+    30%{
+        opacity: 1;
+    }
+    80%{
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(0,-3px);
+        display: none;
+      }
+}
+// .l-notification-container{
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     position: relative;
+//     width: 100%;
+//     // height: 100%;
+//     position: absolute;
+// }
+.notification-blue{
+    animation: notification 3s;
+    animation-fill-mode: forwards;
+    border: solid $lite-blue;
+    background: rgba(202, 250, 240, 0.8);
+    position: fixed;
+    top: 50%;
+    // left: 50%;
+    transform: translate(-50%, -50%);
+    // margin-top: 200px;
+    min-height: 3rem;
+    height: auto;
+    width: 80%;
+    max-width: 500px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index:10;
+    .notification-text{
+        font-weight: bold;
+        color: blue;
+    }
+}
+.notification-red{
+    animation: notification 3s;
+    animation-fill-mode: forwards;
+    border: solid red;
+    background: rgba(255, 221, 241, 0.8);
+    position: absolute;
+    bottom: 5rem;
+    height: auto;
+    min-height: 3rem;
+    width: 90%;
+    max-width: 550px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    .notification-text{
+        font-weight: bold;
+        color: blue;
+    }
+}
+.notification-fixed-red{
+    animation: notification 3s;
+    animation-fill-mode: forwards;
+    border: solid red;
+    background: rgba(255, 221, 241, 0.8);
+    bottom: 5rem;
+    height: 3rem;
+    // min-height: 3rem;
+    width: 80%;
+    max-width: 550px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    .notification-text{
+        font-weight: bold;
+        color: blue;
+    }
+}
+// .notification-confirm{
+//     animation-fill-mode: forwards;
+//     border: solid $lite-blue;
+//     background: rgba(253, 253, 253, 0.8);
+//     // position: fixed;
+//     bottom: 5rem;
+//     height: 3rem;
+//     width: 80%;
+//     max-width: 550px;
+//     padding: 1rem;
+//     display: flex;
+//     align-items: center;
+//     flex-direction: column;
+//     justify-content: center;
+//     .notification-text{
+//         font-weight: bold;
+//         color: rgb(255, 51, 51);
+//     }
+// }
+// animation for name'notice'
+// this is vue transition for components so transition tag as HTMl is required
+// like <transition>
+.notice-enter-from{
+    opacity: 0;
+  }
+  .notice-enter-to{
+    opacity: 1 ;
+  }
+  .notice-enter-active, .notice-leave-active {
+  transition: opacity .2s;
+  }
+  
+//   animation for HTML tag
+@keyframes l-container {
+    0% {
+        transform: translate(0,50px);
+        opacity: 0;
+      }
+    30%{
+        opacity: 1;
+        transform: translate(0,0);
+    }
+}
+@keyframes l-wrapper {
+    0% {
+        opacity: 0;
+      }
+    40%{
+        opacity: 1;
+    }
+}
+
+// animation for shine class tag for loading dammy
+.shine{
+    /*キラッと光る基点とするためrelativeを指定*/
+	position: relative;
+    /*ボタンの形状*/	
+	display:inline-block;
+    background: #333;
+    color: #fff;
+    padding: 10px 20px;
+    text-decoration: none;
+    outline: none;
+    overflow: hidden;
+}
+
+/*キラッと光る*/
+.shine::before {
+	content: '';
+    /*絶対配置でキラッと光るの位置を決める*/
+	position: absolute;
+	top: 0;
+	left: -75%;
+    /*キラッと光る形状*/
+    width: 50%;
+	height: 100%;
+	background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,.3) 100%);
+	transform: skewX(-25deg);
+    animation: shine 1.6s linear infinite;
+}
+@keyframes shine {
+	100% {
+		left: 125%;
+	}
+}
+// fontawesome
+// .fas{
+//   margin-top: 0.2rem;
+// }
+
+// cropper
