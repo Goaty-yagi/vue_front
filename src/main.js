@@ -11,7 +11,7 @@ import 'vue-select/dist/vue-select.css';
 
 
 
-axios.defaults.baseURL = 'http://127.0.0.1:8000'
+axios.defaults.baseURL = 'https://neko-japanese-back.herokuapp.com/'
 
 createApp(App).use(store).use(router, axios, withUUID,ConfettiExplosion).component("v-select", vSelect).mount('#app')
 
