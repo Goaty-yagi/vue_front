@@ -510,8 +510,7 @@ export default {
         },
         async getDjangoUser({ state, commit,dispatch }){
             // commit('setIsLoading', true, {root:true})
-            console.log("GONNA_GET DJANGO_USER",state.user, state.user&&!state.beingException, state.user.uid, state.beingException)
-            if(!state.beingException){
+            if(state.user&&!state.beingException){
                 console.log('GDU_pass',state.beingException)
                 try{
                     await axios
@@ -839,7 +838,6 @@ const unsub = onAuthStateChanged(auth,(user) =>{
     console.log('unsub',user)
     store.dispatch('createLog')
     if(user){
-        store.commit('checkBeingException')
         store.dispatch('getDjangoUser')
         store.commit('emailVerifiedHandler',user.emailVerified)
         store.dispatch('signupDjangoUserForException')
