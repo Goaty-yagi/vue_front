@@ -249,7 +249,7 @@ export default {
             }
         },
         async getFieldNameId({ state, commit }){
-            if(state.fieldNameId==false){
+            // if(state.fieldNameId==false){
                 commit('setIsLoading', true, {root:true})
                 let response = await axios
                 .get("/api/field-list/")
@@ -265,7 +265,7 @@ export default {
                 });
                 commit('setFieldNameId',response.data)
                 commit('setIsLoading', false,{root:true})
-            }
+            // }
         },
         async getStatusNameId({ state, commit }){
             if(state.statusNameId==false){
