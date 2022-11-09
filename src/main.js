@@ -9,9 +9,8 @@ import ConfettiExplosion from "vue-confetti-explosion";
 
 import 'vue-select/dist/vue-select.css';
 
-
-
-axios.defaults.baseURL = 'https://quiz-back-django.herokuapp.com/'
+const isLocal = document.URL.includes('localhost')
+axios.defaults.baseURL = isLocal? 'http://127.0.0.1:8000/':'https://quiz-back-django.herokuapp.com/'
 
 createApp(App).use(store).use(router, axios, withUUID,ConfettiExplosion).component("v-select", vSelect).mount('#app')
 

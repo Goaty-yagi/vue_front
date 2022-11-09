@@ -510,6 +510,7 @@ export default {
         },
         async getDjangoUser({ state, commit,dispatch }){
             // commit('setIsLoading', true, {root:true})
+            console.log("GONNA_GET DJANGO_USER", state.user.uid)
             if(state.user&&!state.beingException){
                 console.log('GDU_pass',state.beingException)
                 try{
