@@ -263,6 +263,7 @@ export default {
             return this.$store.getters.questionTypeId
         },
         quizFieldList() {
+            console.log("CHECK FIELD NAME",this.fieldNameId)
             let list = [];
             for (let i of this.fieldNameId) {
                 if (this.convertQuizGradeToId(this.tempQuiz) == i.grade) {
