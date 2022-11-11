@@ -184,18 +184,6 @@
             :answerId='answerId'
             :reply="reply"
             />
-        <!-- {{ questions }} -->
-        <!-- <div class=question 
-         v-for="(question,questionindex) in questions"
-         v-bind:key="questionindex">
-            <div class="tag">tag:{{ question.tag }}</div>
-            <div class="title">title:{{ question.title }}</div>
-            <div class="good">good:{{ question.good }}</div>
-            <div class="date">data:{{ remove_T_Z(question.timestamp) }}</div>
-        </div>
-        <CreateQuestion v-if='showCreateQuestion'
-        @handleShowConfirm='handleShowConfirm'/>
-        <Confirm v-if='showConfirm'/> -->
          </div>
     </div>
 </template>
@@ -304,6 +292,7 @@ export default {
             await axios
                 .get(url)
                 .then(response => {
+                    console.log('GOT DATA', response.data)
                     this.question = response.data
                     this.questionTitle = this.question.title
                     this.questionDescription = this.question.description
