@@ -289,6 +289,7 @@ export default {
             }else{
                 var url = `/api/board/question/${slug}`
             }
+            console.log("URL", url)
             await axios
                 .get(url)
                 .then(response => {
@@ -321,6 +322,7 @@ export default {
                     // }
                 })
                 .catch(e => {
+                    console.log("ERROR_DESU")
                     let logger = {
                     message: "in Community/getDetail. couldn't get Detail-question",
                     path: window.location.pathname,
