@@ -540,7 +540,7 @@ export default {
         },
         async getFavoriteQuestion({ state, commit }){
             state.favoriteQuestion = null
-            if(state.djangoUser){
+            if(state.djangoUser&&state.djangoUser.favorite_question.length){
                 const questionId = []
                 for(let i of state.djangoUser.favorite_question[0].question){
                     console.log('GFQQQQQ',i)
