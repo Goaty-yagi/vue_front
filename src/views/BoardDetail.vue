@@ -289,7 +289,7 @@ export default {
             }else{
                 var url = `/api/board/question/${slug}`
             }
-            console.log("URL", url)
+            console.log("URL",)
             await axios
                 .get(url)
                 .then(response => {
@@ -299,8 +299,8 @@ export default {
                     this.questionDescription = this.question.description
                     this.questionSlug = this.question.slug
                     this.questionId = this.question.id
-                    this.liked_num = this.question.liked_num[0].liked_num
-                    this.likedUserIdList = this.question.liked_num[0].user
+                    this.liked_num = this.question.liked_num.length?this.question.liked_num[0].liked_num:0
+                    this.likedUserIdList = this.question.liked_num.length?this.question.liked_num[0].user:[]
                     this.questionUser = this.question.user.UID
                     this.allAnswer = this.question.answer
                     this.viewed = this.question.viewed
