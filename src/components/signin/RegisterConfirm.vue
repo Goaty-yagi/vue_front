@@ -107,6 +107,7 @@ export default {
                 this.userInfo={
                     UID: this.$store.state.signup.user.uid,
                     name: this.$store.state.signup.username,
+                    password: this.$store.state.signup.password,
                     email: this.$store.state.signup.email,
                     country: this.$store.state.signup.country,
                     quiz_taker: [
@@ -130,6 +131,7 @@ export default {
                 this.userInfo={
                     UID: this.$store.state.signup.user.uid,
                     name: this.$store.state.signup.username,
+                    password: this.$store.state.signup.password,
                     email: this.$store.state.signup.email,
                     country: this.$store.state.signup.country,
                     ip_data: [{

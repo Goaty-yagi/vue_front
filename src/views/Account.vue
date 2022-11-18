@@ -313,6 +313,7 @@ export default{
             console.log('inA',this.showThumbnail)
         },
         getCurrentGradeNameFromIds(gradeID){
+            console.log("GRADEID", gradeID, this.quizNameId)
             for (let i of this.quizNameId){
                 if(i.id == gradeID){
                     return i.name

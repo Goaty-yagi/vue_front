@@ -37,6 +37,7 @@ import Notification from '@/components/initial/Notification.vue'
 import NotLogin from '@/components/login/NotLogin.vue'
 import  Bar from '@/components/charts/Bar.vue'
 import  Chart from '@/components/account/Chart.vue'
+import {router} from "@/main.js"
 import axios from 'axios';
 
 export default {

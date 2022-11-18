@@ -152,7 +152,6 @@ function initialData() {
         showConfirm: false,
         tempQuiz:'初級',
         tempField:'フィールドを選択してください。',
-        // tempQuizType: '選択',
         questionDetailInfo:{},
         formQuestionData:{
             quiz:'初級',
@@ -220,6 +219,7 @@ export default {
     },
     created(){
         this.$store.dispatch('getQuestionTypeId')
+        this.$store.dispatch('getFieldNameId')
     },
     beforeMount(){
         // this.$store.dispatch('getQuestionTypeId')
@@ -245,12 +245,6 @@ export default {
             this.formQuestionData.quiz = v
             this.formQuestionData.field = this.tempField
         },
-        // tempQuizType:function(v) {
-        //     this.formQuestionData.question_type = v
-        //     for(let i of this.formAnswerDataList) {
-        //         i.is_correct = ''
-        //     }
-        // }
     },
     computed:{
         quizNameId() {

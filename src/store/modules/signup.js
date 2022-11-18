@@ -508,13 +508,29 @@ export default {
                 // }
             }
         },
+        // async getToken() {
+        //     await 
+        //     axios
+        //     // fetch("http://127.0.0.1:8000/api/csrf/")
+        //     //     .then((res) => {
+        //     //         console.log("res",res.headers.get("X-CSRFToken"))
+        //     //     })
+        //         .get(`/api/csrf`,{ withCredentials: true })
+        //         .then(response => {
+                    
+        //             console.log("MOMO",response)
+        //         })
+        //         .catch((err) => {
+        //             console.log(err)
+        //         })
+        // },
         async getDjangoUser({ state, commit,dispatch }){
             // commit('setIsLoading', true, {root:true})
             if(state.user&&!state.beingException){
                 console.log('GDU_pass',state.beingException)
                 try{
                     await axios
-                    .get(`/api/user/${state.user.uid}`)
+                    .get(`/api/user/${state.user.uid}`,{ withCredentials: true })
                     .then(response => {
                         commit('setDjangoUser',response.data)
                         state.myQuestion = response.data.my_quiz[0].my_question
@@ -623,6 +639,10 @@ export default {
                 context.commit('setTirdPartyLoginData',result.user)
                 context.dispatch('getIpData')
             }).catch((e) => {
+                console.log(e.code)
+                if(e.code == 'auth/popup-closed-by-user'||'auth/cancelled-popup-request') {
+                    return 
+                }
                 let logger = {
                     message: "in store/signup.googleLogin. couldn't Login firebase user",
                     name: window.location.pathname,
@@ -837,6 +857,7 @@ const unsub = onAuthStateChanged(auth,(user) =>{
     store.commit('setUser',user)
     console.log('unsub',user)
     store.dispatch('createLog')
+    // store.dispatch('getToken')
     if(user){
         store.dispatch('getDjangoUser')
         store.commit('emailVerifiedHandler',user.emailVerified)

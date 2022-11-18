@@ -1,5 +1,5 @@
 <template>
-    <div class="quiz-home-wrapper" :class="{'scroll-fixed':fixedScroll, 'laoding-center':$store.state.isLoading}">
+    <div class="quiz-home-wrapper" >
         <div class="main-wrapper">
             <QuizP
             v-if="componentHandleDict.quiz"
