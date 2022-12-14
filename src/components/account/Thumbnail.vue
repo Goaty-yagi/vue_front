@@ -28,7 +28,7 @@ export default {
     // if imageTyoe == 'thumbnail' => axios
     // els if imageType == 'quizQuestion' => return blob
     props:[
-        "getDjangouser",
+        "getUser",
         "minContainerWidth",
         "minContainerHeight",
         "imageType",
@@ -59,7 +59,7 @@ export default {
     },
     computed:{
         user(){
-            return this.$store.state.signup.djangoUser
+            return this.$store.state.signup.user
         },
         width(){
             if(this.minContainerWidth == 800){
@@ -167,7 +167,7 @@ export default {
                     formData.append('thumbnail',blob, `${this.image}.png`),
                     // console.log('getthumb',formData.get('thumbnail'),this.image,blob),
                     axios
-                    .patch(`/api/user/${this.getDjangouser.UID}`,
+                    .patch(`/api/user/${this.getUser.UID}`,
                         formData)
                 }, 'image/png')
                 this.showThumbnailFalse()

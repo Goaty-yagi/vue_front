@@ -8,6 +8,13 @@
         :stageHeight="800"
         :stageWidth="1600"
         :shouldDestroyAfterDone="true"/> -->
+        <div id="google"></div>
+        <!-- <GoogleLogin :callback="callback">
+    <v-btn style="height:55px;width:210px">
+        <img src="/assets/btn_google_signin_light_normal_web@2x.png"  style="height:50px"/>
+    </v-btn>
+</GoogleLogin> -->
+
         <div class="main-wrapper">
             <div class="is-loading-bar has-text-centered" v-bind:class="{'is-loading': $store.state.isLoading }">
                 <!-- <i class="fas fa-cog"></i> -->
@@ -16,7 +23,7 @@
             <div v-if="!showCompo" class='home-main-wrapper'>
                 <div class="home-hero">
                     <p class="hero-title">楽しく学ぶ最高峰の日本語ラーニングコミュニティ</p>
-                    <img @click="testClick" src="@/assets/logo-with-logo.png">
+                    <img @click="test" src="@/assets/logo-with-logo.png">
                     <div class="hero-paragraph-wrapper">
                         <div class="paragraph-container">
                             <p class="hero-paragraph">自分のレベルに合った問題をクイズ形式で
@@ -53,6 +60,7 @@
                             <div class="hero-title">
                                 <p>運営からのお知らせ</p>
                             </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -82,6 +90,9 @@ import TestConf from '@/components/initial/TestConf.vue'
 import Notification from '@/components/initial/Notification.vue'
 import NotLogin from '@/components/login/NotLogin.vue'
 import  Chart from '@/components/account/Chart.vue'
+import axios from 'axios'
+// import jwt_decode from "jwt-decode";
+
 // import Cookies from 'js-cookie'
 //  import { uuid } from 'vue-uuid';
 export default {
@@ -102,6 +113,9 @@ export default {
             test1:"",
             slideIn:true,
             slideOut:false,
+            googleInstance:'',
+            uid:"",
+            token:"",
             // showChart:false,
             backgroundColorList:[
                 'rgba(255, 153, 51, 0.2)',
@@ -123,15 +137,53 @@ export default {
                     pointHoverBorderColor: 'red'
                 }],
             },
+            client:{},
+            clientConfig: {
+//         client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
+//         scope: 'https://www.googleapis.com/auth/userinfo.email',
+//         redirect_uri:'http://127.0.0.1:8000/api/user-google/',
+//         ux_mode: 'redirect',
+//         // ux_mode: 'popup',
+//         callback: (response) => {console.log("response",response)
+//   },
+      }
         }
     },
-    mounted(){
+    mounted(){  
         // this.test()
         // this.reload()
         // this.aaa()
-        this.unko()
-        const regionNames = new Intl.DisplayNames(['jp'], { type: 'region' });
-        console.log('mounted',regionNames.of('JP'))
+        // this.client = google.accounts.oauth2.initTokenClient({
+        // client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
+        // scope: 'https://www.googleapis.com/auth/userinfo.email',
+        // redirect_uri:'http://127.0.0.1:8000/api/user-google/',
+        // // ux_mode: 'redirect',
+        // ux_mode: 'popup',
+//         callback: (response) => { this.callback(response)
+//   },
+//       })
+ 
+        // const regionNames = new Intl.DisplayNames(['jp'], { type: 'region' });
+        // this.googleInstance = google.accounts.id.initialize({
+        //     client_id: "510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com",
+        //     scope: 'https://www.googleapis.com/auth/calendar.readonly \
+        //           https://www.googleapis.com/auth/contacts.readonly',
+        //     redirect_uri:'http://127.0.0.1:8000/api/user-google/',
+        //     callback: this.callback
+        // })
+        // google.accounts.id.renderButton(
+        //     document.querySelector("#google"),
+        //     {theme:"outline", size: "large"}
+        // )
+        console.log('mounted',document.cookie.split(';'))
+        const cookies = document.cookie.split(';')
+        const refresh_token = cookies.map((value) => {
+            const contentArray = value.split('=')
+            const isTrue = contentArray.find(e => e.includes('refresh_token'))
+            if(isTrue) {
+                return contentArray[1]
+            }
+        }).find(v => v != undefined)
         this.scrollTop()
         this.setInitUserStatus()
         // console.log('mounted',this.$store.state.signup.djangoUser)
@@ -162,19 +214,101 @@ export default {
         }
     },
     methods:{
+        test() {
+            this.$store.dispatch("getUserData",'926e1a52-9c2d-4104-a116-832ed46c62e5')
+        },
+        async callback (response){
+            console.log("Login response", response)
+            const access_token = response.access_token
+            console.log(access_token)
+            await axios({
+                method: 'post',
+                url: '/api/user-google/',
+                data: {
+                    access_token: access_token,
+                },
+            })
+            .then(async (res) => {
+                console.log("res",res)
+                const UID = res.data.user.pk
+                const at = res.data.access_token
+                document.cookie =  `access_token = ${res.data.access_token}`
+                console.log("AT", at)
+                await axios.get( `/api/user/${UID}`,{
+                    withCredentials: true,
+                    headers: {
+                    "Authorization": 'JWT ' + `${at}`,
+                    "Content-Type":"aplication/json"
+                    }
+                })
+                .then((res) => console.log(res))
+                .catch((e) => {
+                    console.log("error",e)
+            })
+            })
+            .catch((e) => {
+                console.log("EROOR", e)
+            })
+            // const userInfo = await axios.get( `/api/user/${UID}`)
+            // .catch((e) => {
+            //     console.log("error",e)
+            // })
+            // print("userinfo", userInfo)
+            
+            // const a = jwt_decode(response.credential)
+            // console.log(a)
+            // console.log(a.access_token)
+        },
+        async testLogin() {
+            await axios({
+                method: 'post',
+                url: '/api/login/',
+                data: {
+                    "username": "sasuke",
+                    "email": "sasuke@co.com",
+                    "password": "ossan1682"
+                }
+            })
+            .then((res) => {
+                console.log(res)
+                this.uid = res.data.user.pk
+                this.token = res.data.access_token
+            })
+            .catch((e) => {
+                console.log("error", e)
+            })
+        },
+        async accessDetail(){
+            await axios.get( `/api/user/${this.uid}`,{
+                    withCredentials: true,
+                    headers: {
+                    "Authorization": 'JWT ' + `${this.token}`,
+                    "Content-Type":"aplication/json"
+                    }
+                })
+                .then((res) => console.log(res))
+                .catch((e) => {
+                    console.log("error",e)
+            })
+        },
+        async googleLogin() {
+            console.log("clicked")
+     this.client.requestAccessToken()
+        
+        // const b =  a.requestCode()
+        //     // const user = await this.$gAuth.signIn()
+        //     console.log("user",b)
+        },
+        async googleLogout(req) {
+            // const a =this.googleInstance.Lc()
+            // const user = await this.$gAuth.signOut()
+            console.log("user")
+        },
         // randomBackground(){
         //     this.chartData.datasets.backgroundColor = this.backgroundColorList[Math.floor(Math.random() * this.backgroundColorList.length)];
         //     console.log('RANDOM',this.chartData.datasets.backgroundColor)
         //     this.showChart=true
         // },np,
-        unko(){
-            // let a = document.getElementById('unko')
-            // let b = document.querySelector('#unko')
-            // console.log('unko',a,b, typeof a)
-            // this.$store.commit('setTempUserNull')
-            // window.localStorage.removeItem('quizkey')
-            // return `/quiz/${this.status}`
-            },
         componentHandler(){
             if(this.tempUserTest){
                 this.handleShowNotLogin()

@@ -85,6 +85,19 @@ export default createStore({
             Cookies.set(key,value, {expires: 3, secure: true}),
           removeItem:(key) => Cookies.remove(key),
         }
+      }),
+      createPersistedState({
+        key: 'tokens',  // 設定しなければ'vuex'
+        paths: [
+          "signup.accessToken",
+          "signup.refreshToken",
+        ],
+        storage:{
+          getItem:(key) => Cookies.get(key),
+          setItem:(key,value) =>
+            Cookies.set(key,value, {expires: 3, secure: true}),
+          removeItem:(key) => Cookies.remove(key),
+        }
       })
   ],
   getters:{

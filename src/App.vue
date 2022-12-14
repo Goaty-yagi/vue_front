@@ -29,6 +29,7 @@ import ConnectionError from '@/views/not-found/ConnectionError.vue'
 import Sent from '@/components/signin/Sent.vue'
 import { computed, ref } from 'vue'
 import { useStore } from 'vuex'
+import jwt_decode from "jwt-decode";
 export default{
   setup(){
     const store = useStore()
@@ -57,10 +58,14 @@ export default{
     ConnectionError
   },
   mounted(){
+    this.initialization()
     console.log('mounted-app')
-    this.unko()
   },
   methods:{
+    async initialization() {
+      console.log("INITIALIZE")
+      await this.$store.dispatch('getUserData')
+    },
     storeReset(){
           this.$store.commit('reset')
     },
@@ -72,15 +77,15 @@ export default{
     handleShowSent(){
       this.showsent = true
     },
-    unko() {
-      // document.addEventListener('wrapper', function(){
+    // unko() {
+    //   // document.addEventListener('wrapper', function(){
 
-      // ページの表示状態が変わったときに実行
-      document.addEventListener("visibilitychange", function() {
-        console.log('changed',document.visibilityState);
-      // });
-    });
-    }
+    //   // ページの表示状態が変わったときに実行
+    //   document.addEventListener("visibilitychange", function() {
+    //     console.log('changed',document.visibilityState);
+    //   // });
+    // });
+    // }
   }
 }
 </script>

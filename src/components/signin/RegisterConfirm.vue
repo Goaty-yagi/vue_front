@@ -129,21 +129,21 @@ export default {
             }else{
                 console.log('NO TEMP')
                 this.userInfo={
-                    UID: this.$store.state.signup.user.uid,
+                    // UID: this.$store.state.signup.user.uid,
                     name: this.$store.state.signup.username,
                     password: this.$store.state.signup.password,
                     email: this.$store.state.signup.email,
                     country: this.$store.state.signup.country,
-                    ip_data: [{
-                        city: this.IPInfo.city,
-                        ip: this.IPInfo.ip,
-                        loc: this.IPInfo.loc,
-                        org: this.IPInfo.org,
-                        postal: this.IPInfo.postal,
-                        region: this.IPInfo.region,
-                        timezone: this.IPInfo.timezone,
-                        country: this.IPInfo.country
-                    }]
+                    // ip_data: [{
+                    //     city: this.IPInfo.city,
+                    //     ip: this.IPInfo.ip,
+                    //     loc: this.IPInfo.loc,
+                    //     org: this.IPInfo.org,
+                    //     postal: this.IPInfo.postal,
+                    //     region: this.IPInfo.region,
+                    //     timezone: this.IPInfo.timezone,
+                    //     country: this.IPInfo.country
+                    // }]
                 }
             }
             try{

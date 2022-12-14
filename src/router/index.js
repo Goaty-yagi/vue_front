@@ -22,6 +22,7 @@ import BoardAccount from '../views/board/BoardAccount.vue'
 import TermsAndConditions from '../views/footer-contents/TermsAndConditions.vue'
 import Privacy from '../views/footer-contents/Privacy.vue'
 import Enquire from '../views/footer-contents/Enquire.vue'
+import EmailVerification from '../views/EmailVerification.vue'
 
 import store from '../store'
 
@@ -132,6 +133,11 @@ const routes = [
     name: 'Enquire',
     component: Enquire,
   },
+  {
+    path: '/verification/:token',
+    name: 'EmailVerification',
+    component: EmailVerification,
+  },
   { 
     path: '/notfound',
     name: 'NotFound',
@@ -179,38 +185,38 @@ const scrollTop = (() => {
 // => can't go signup,login quiz-init
 // 6 can't go quiz-test if took already
 
-router.beforeEach((to, from, next) => {
-    scrollTop()
-    // this is for 1
-    console.log("router",!store.state.signup.emailVerified&&store.state.signup.registeredUser,store.state.signup.registeredUser)
-    if (to.matched.some(record => record.meta.login) && !store.state.signup.djangoUser) {
-    console.log("LOGIN",to.matched)
-    next({ name: 'Login' });
-    }
-    // this is for 2
-    else if(to.matched.some(record => record.meta.quizTook)&&store.state.signup.tempUser.test){
-        console.log("LOGIN",to.matched)
-        next({ name: 'Login' });
-      }
-    //  this is for 3
-    else if(to.matched.some(record => record.meta.apiException==false)&&store.state.signup.apiError.any){
-      console.log("BeingException",to.matched)
-      next({ name: 'ConnectionError' });
-      }
-    //   this is for 4 next will be chainge to new not found im gonna male later
-    else if(to.matched.some(record => record.meta.emailVerified)&&!store.state.signup.emailVerified&&store.state.signup.registeredUser){
-    console.log("NOTFOUND",to.matched)
-    next({ name: 'NotFound' });
-    }
-    // this is for 5 next will be chainge to new not found im gonna male later
-    else if(to.matched.some(record => record.meta.compUser)&&store.state.signup.emailVerified){
-        console.log("NOTFOUND",to.matched)
-        next({ name: 'NotFound' });
-    }
-    else {
-    console.log('else',to.matched,'D',store.state.signup.djangoUser,"U",store.state.signup.user)
-    next()
-  }
-})
+// router.beforeEach((to, from, next) => {
+//     scrollTop()
+//     // this is for 1
+//     console.log("router",!store.state.signup.emailVerified&&store.state.signup.registeredUser,store.state.signup.registeredUser)
+//     if (to.matched.some(record => record.meta.login) && !store.state.signup.djangoUser) {
+//     console.log("LOGIN",to.matched)
+//     next({ name: 'Login' });
+//     }
+//     // this is for 2
+//     else if(to.matched.some(record => record.meta.quizTook)&&store.state.signup.tempUser.test){
+//         console.log("LOGIN",to.matched)
+//         next({ name: 'Login' });
+//       }
+//     //  this is for 3
+//     else if(to.matched.some(record => record.meta.apiException==false)&&store.state.signup.apiError.any){
+//       console.log("BeingException",to.matched)
+//       next({ name: 'ConnectionError' });
+//       }
+//     //   this is for 4 next will be chainge to new not found im gonna male later
+//     else if(to.matched.some(record => record.meta.emailVerified)&&!store.state.signup.emailVerified&&store.state.signup.registeredUser){
+//     console.log("NOTFOUND",to.matched)
+//     next({ name: 'NotFound' });
+//     }
+//     // this is for 5 next will be chainge to new not found im gonna male later
+//     else if(to.matched.some(record => record.meta.compUser)&&store.state.signup.emailVerified){
+//         console.log("NOTFOUND",to.matched)
+//         next({ name: 'NotFound' });
+//     }
+//     else {
+//     console.log('else',to.matched,'D',store.state.signup.djangoUser,"U",store.state.signup.user)
+//     next()
+//   }
+// })
 
 export default router

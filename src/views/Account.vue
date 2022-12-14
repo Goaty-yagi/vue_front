@@ -6,7 +6,8 @@
                 <div class="lds-dual-ring"></div>
             </div>
             
-            <div v-if='$store.state.isLoading==false&&userData&&gotInfo' class="content-wrapper">
+            <div class="content-wrapper">
+            <!-- <div v-if='$store.state.isLoading==false&&userData&&gotInfo' class="content-wrapper">     -->
                 <h1 class='title-white'>アカウント</h1>
                 <div class="cropper-wrapper">
                     <img v-bind:src="getImageURL(userData.thumbnail)"/>
@@ -96,7 +97,7 @@
         <Thumbnail v-if="showThumbnail"
         @showThumbnailFalse="showThumbnailFalse"
         @getUserData="getUserData"
-        :getDjangouser="getDjangouser"
+        :getUser="getUser"
         :minContainerHeight="minContainerHeight"
         :imageType="imageType"
         :minContainerWidth="minContainerWidth"/>
@@ -219,7 +220,7 @@ export default{
         this.scrollFixedForUnmailverified()
         window.addEventListener('resize', this.getWidth)
         this.currentPageName = ''
-        this.patchImage()
+        // this.patchImage()
         this.getCurrentPageName()
         // this.handleShowEmailVerified()
     },
@@ -253,37 +254,38 @@ export default{
             console.log('false')
             this.gotInfo = true
         },
-        async patchImage(){
-            this.$store.commit('setIsLoading', true)
-            var list = this.getDjangouser.thumbnail.split('/')
-            console.log('list',list)
-            try{
-                if(list.includes('default.png')&&this.getPhotoURL){
-                    console.log('png');
-                    const blob = await fetch(this.getPhotoURL).then(r => r.blob());
-                    const headers = { "content-type": "multipart/form-data" };
-                    const formData = new FormData();
-                    formData.append('thumbnail',blob,`${blob}.png`)
-                    console.log('getthumb',formData.get('thumbnail'),formData),
-                    axios.patch(`/api/user/${this.getDjangouser.UID}`,
-                        formData,
-                        {headers}
-                    )
-                }
-            } catch (e) {
-                let logger = {
-                    message: "in Account/patchImage. couldn't Patch image",
-                    path: window.location.pathname,
-                    actualErrorName: e.name,
-                    actualErrorMessage: e.message,
-                }
-                this.$store.commit('setLogger',logger)
-                this.$store.commit('setIsLoading', false)
-                router.push({ name: 'ConnectionError' })
-            }
-            this.$store.commit('setIsLoading', false)
-            this.getUserData()
-        },
+        // async patchImage(){
+        //     this.$store.commit('setIsLoading', true)
+        //     console.log("GU",this.getUser)
+        //     var list = this.getUser.thumbnail.split('/')
+        //     console.log('list',list)
+        //     try{
+        //         if(list.includes('default.png')&&this.getPhotoURL){
+        //             console.log('png');
+        //             const blob = await fetch(this.getPhotoURL).then(r => r.blob());
+        //             const headers = { "content-type": "multipart/form-data" };
+        //             const formData = new FormData();
+        //             formData.append('thumbnail',blob,`${blob}.png`)
+        //             console.log('getthumb',formData.get('thumbnail'),formData),
+        //             axios.patch(`/api/user/${this.getDjangouser.UID}`,
+        //                 formData,
+        //                 {headers}
+        //             )
+        //         }
+        //     } catch (e) {
+        //         let logger = {
+        //             message: "in Account/patchImage. couldn't Patch image",
+        //             path: window.location.pathname,
+        //             actualErrorName: e.name,
+        //             actualErrorMessage: e.message,
+        //         }
+        //         this.$store.commit('setLogger',logger)
+        //         this.$store.commit('setIsLoading', false)
+        //         router.push({ name: 'ConnectionError' })
+        //     }
+        //     this.$store.commit('setIsLoading', false)
+        //     this.getUserData()
+        // },
         getImageURL(url){
             if(this.getPhotoURL){
                 return this.getPhotoURL
@@ -436,7 +438,7 @@ export default{
                 this.minContainerHeight = 800
                 this.minContainerWidth = 800
             }
-            console.log('width2',this.widthForCropper)
+            console.log('width2',this.widthForCropper,document.cookie)
         },
         scrollFixedForUnmailverified(){
             if(!this.getEmailVerified){

@@ -1,6 +1,6 @@
 <template>
     <div class="header-wrapper">
-        <template v-if='authIsReady' >
+        <div v-if='authIsReady'>
             <nav class="nav-container">
                 <div class="nav-brand">
                     <router-link @click="storeReset" to="/" >
@@ -21,7 +21,7 @@
                     </div>
                 </div>     
             </nav>
-        </template>
+        </div>
     </div>
 </template>
 

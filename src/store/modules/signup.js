@@ -3,6 +3,8 @@ import Cookies from 'js-cookie'
 import { auth } from '@/firebase/config'
 import {router} from "@/main.js"
 import axios from 'axios'
+import jwt_decode from "jwt-decode";
+
 import {
   createUserWithEmailAndPassword,
   fetchSignInMethodsForEmail,
@@ -33,13 +35,13 @@ export default {
         password:'',
         user: null,
         registeredUser: false,
-        djangoUser: null,
+        // user: null,
         UID:'',
         fasvoriteQuestion:'',
         emailVerified:null,
         authIsReady:false,
         checkedEmail:null,
-        accountURL:'http://localhost:8080/',
+        accountURL: window.location.origin, 
         actionCodeSettings:{
             url: null,
             handleCodeInApp: true
@@ -81,10 +83,12 @@ export default {
             '中級':20,
             '上級':30
         },
-        thirdPartyLogindata:'',
+        thirdPartylogindata:'',
         thirdPartyError:'',
         photoURL:'',
         countryData:'',
+        accessToken:'',
+        refreshToken:''     
     },
     getters:{
         getUID(state){
@@ -93,9 +97,9 @@ export default {
         getUser(state){
             return state.user
         },
-        getDjangouser(state){
-            return state.djangoUser
-        },
+        // getuser(state){
+        //     return state.user
+        // },
         getEmailVerified(state){
             return state.emailVerified
         },
@@ -147,7 +151,7 @@ export default {
             state.user = payload
             if(state.user){
                 state.registeredUser = true
-                state.UID = state.user.uid
+                state.UID = state.user.UID
             }
             console.log('user state changed:',state.user)
         },
@@ -155,10 +159,10 @@ export default {
             state.authIsReady = payload
             console.log('setauth is changed:',state.user)
         },
-        setDjangoUser(state,payload){
-            state.djangoUser = payload
-            console.log('set Django user',state.djangoUser)
-        },
+        // setuser(state,payload){
+        //     state.user = payload
+        //     console.log('set Django user',state.user)
+        // },
         emailVerifiedHandler(state,payload){
             state.emailVerified = payload
             console.log('emailV chainged',state.emailVerified)
@@ -187,7 +191,7 @@ export default {
         resetQuizKeyStorage(state){
             // this is for log out
             state.UID = null
-            state.djangoUser = null
+            state.user = null
             state.emailVerified = null
             state.beingException = false,
             state.reloadForException = false
@@ -219,7 +223,7 @@ export default {
             state.userInfo = payload
         },
         checkBeingException(state,payload){
-            if(state.user&&!state.djangoUser){
+            if(state.user&&!state.user){
                 state.beingException = true
                 console.log('set-being-exception',state.beingException)
             }
@@ -229,7 +233,7 @@ export default {
             console.log('setRUFEtrue')
         },
         reloadForExceptionTrue(state){
-            if(state.user&&!state.djangoUser){
+            if(state.user&&!state.user){
                 state.reloadForException = true
                 console.log('setRUFEtrue')
             }
@@ -281,18 +285,18 @@ export default {
             console.log("after",state.myQuestion)
         },
         updateQuizTaker(state,payload) {
-            state.djangoUser.quiz_taker[0].grade = payload.grade
-            state.djangoUser.quiz_taker[0].level = payload.level
-            console.log('set', state.djangoUser)
+            state.user.quiz_taker[0].grade = payload.grade
+            state.user.quiz_taker[0].level = payload.level
+            console.log('set', state.user)
         },
         updateQuizTakerMax(state, payload) {
             // this is for session storage only to reduce API hit
-            state.djangoUser.quiz_taker[0].max_level = state.djangoUser.quiz_taker[0].level
-            state.djangoUser.quiz_taker[0].max_grade = payload
+            state.user.quiz_taker[0].max_level = state.user.quiz_taker[0].level
+            state.user.quiz_taker[0].max_grade = payload
                     
-            console.log('set_max', state.djangoUser)
+            console.log('set_max', state.user)
         },
-        setTirdPartyLoginData(state, payload){
+        setTirdPartyloginData(state, payload){
             if(state.tempUser.test){
                 console.log('YES TEMP')
                 state.userInfo={
@@ -314,7 +318,7 @@ export default {
             }
             // try{
             //     console.log("try",this.userInfo)
-            //     this.$store.dispatch('signupDjangoUser',this.userInfo)
+            //     this.$store.dispatch('signupuser',this.userInfo)
             // }
             // catch(error){
             //     console.log('error',error.message)
@@ -339,9 +343,370 @@ export default {
         resetPhotoURL(state,payload){
             state.photoURL = ''
         },
+        setTokens(state, payload) {
+            // console.log("access", jwt_decode(payload.access_token))
+            // if(payload.refresh_token){
+            //     console.log("refresh", jwt_decode(payload.refresh_token))
+            // }
+            console.log('pay', payload)
+            // Cookies.set('access_token', payload.access_token)
+            // Cookies.set('refresh_token', payload.refresh_token)
+            state.accessToken =  payload.access_token
+            state.refreshToken =  payload.refresh_token
+            // document.cookie =  `access_token = ${payload.access_token};secure`
+            // document.cookie =  `refresh_token = ${payload.refresh_token};secure`
+            console.log("token set",Cookies.get('tokens'))
+        },
+        cookieDelete(state) {
+            state.accessToken = ''
+            state.refreshToken = ''
+        }
+        // setPayloadForRetryFetch(payload) {
+        //     // payload must be array
+        //     console.log(Array.isArray(payload))
+        //     if (Array.isArray(payload)) {
+        //         return {
+        //             fun: payload[0],
+        //             args: payload[1]
+        //         }
+        //     } else {
+        //         throw("argument must be array")
+        //     }
+        // }
     },
     actions:{
-        async signupDjangoUser( {state, commit},payload ){
+        async googleLogin(context,payload ){
+            console.log("in GOOGLE login", payload)
+            const googleloginConf =
+            google.accounts.oauth2.initTokenClient({
+                client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/userinfo.email',
+                // redirect_uri:'http://127.0.0.1:8000/api/user-google/',
+                // // ux_mode: 'redirect',
+                // ux_mode: 'popup',
+                callback: (response) => {context.dispatch("googleloginCallback", response)},
+            })
+            try{
+                googleloginConf.requestAccessToken()
+                // throw new Error('could not sent validation')
+                // await axios({
+                //     method: 'post',
+                //     url: '/api/user/',
+                //     data: payload
+                // })
+                // .then(response => {
+                //     commit('setuser',response.data)
+                // })
+                // state.beingException = false
+                // commit("resetDjangoError")
+                // commit("setTempUserReset")
+                // state.userInfo = ''
+            }
+            catch(e){
+                console.log("ERROR",e)
+            }
+        },
+        async googleloginCallback(context, response){
+            console.log("c=allback")
+            const googleAccessToken = response.access_token
+            await axios({
+                method: 'post',
+                url: '/api/user-google/',
+                withCredentials: true,
+                data: {
+                    access_token: googleAccessToken,
+                },
+                
+            })
+            .then(async (res) => {
+                context.commit("setTokens", res.data)   
+                console.log("then", res.data)             
+                await context.dispatch("getUserData")
+                console.log("dispatch done", context.state.user)
+                if(context.state.tempUser.test) {
+                    const quizTakerOb = {
+                        grade: context.state.tempUser.grade,
+                        level: context.state.tempUser.level,
+                    }
+                    context.dispatch('updateQuizTaker', quizTakerOb, { root:true })
+                }
+            })
+            .catch((e) => {
+                console.log("EROOR", e)
+            })
+        },
+        async getUserData(context) {
+            // const accessToken = await context.dispatch("getAccessTokenFromCookies")
+            const accessToken = context.state.accessToken
+            console.log("access",accessToken)
+            if(accessToken) {
+                console.log("acces is true try")
+                try{
+                    const UID = jwt_decode(accessToken).user_id 
+                    if(UID) {
+                        await axios.get( `/api/user/${UID}`,{
+                            // withCredentials: true,
+                            headers: {
+                                "Authorization": 'JWT ' + `${accessToken}`,
+                                "Content-Type":"aplication/json"
+                            }
+                        })
+                        .then((res) => {
+                            context.commit('setUser',res.data)
+                            console.log("USER",res.data.is_active)
+                            context.commit('emailVerifiedHandler',res.data.is_active)
+                            context.commit('setAuthIsReady',true)
+                        })
+                        .catch((e) => {
+                            console.log("error",e.response)
+                            
+                            if(context.dispatch('handleTokenError',e.response.data)) {
+                                const newPayload = {
+                                    fun: 'getUserData',
+                                    args: UID
+                                }
+                                // console.log("self",self.name)
+                                // context.dispatch('retryFetch',newPayload)
+                            }
+                        })
+                    }
+                } catch {
+                    console.log("no decode")
+                    context.commit('setAuthIsReady',true)
+                }
+            } else {
+                console.log("notoken")
+                context.commit('setAuthIsReady',true)
+            }
+        },
+        async login(context, payload) {
+
+            const email = payload.email
+            const password = payload.password
+            await axios({
+                method: 'post',
+                url: '/api/auth/login/',
+                withCredentials: true,
+                data: {
+                    email: email,
+                    password: password
+                },
+                
+            })
+            .then((res) => {
+                const UID = res.data.user.pk
+
+                context.commit("setTokens", res.data)                
+                context.dispatch("getUserData", UID)
+
+            })
+              
+        },
+        async logout(context){
+            try{
+                await signOut(auth)
+                context.commit('setUser',null)
+                context.commit('resetQuizKeyStorage')
+                context.commit('cookieDelete')
+                router.push({ name: 'Home' })
+            } catch(e) {
+                let logger = {
+                    message: "in store/signup.logout. couldn't logout",
+                    name: window.location.pathname,
+                    actualErrorName: e.code,
+                    actualErrorMessage: e.message,
+                }
+                context.commit('setLogger',logger)
+                router.push({ name: 'ConnectionError' })
+            }
+        },
+        async GetAccessTokenFromRefreshToken(context) {
+
+            if(context.state.refreshToken) {
+                try{
+                    await axios({
+                        method: 'post',
+                        url: '/api/auth/token/refresh/',
+                        data: {
+                            'refresh':refresh_token
+                        }
+                    })
+                    .then((res) => {
+                        console.log("RF", res)
+                        const token = {
+                            access_token:res.data.access,
+                            refresh_token:res.data.refresh
+                        }
+                        console.log(token)
+                        context.commit("setTokens", token)   
+                    })
+                }
+                catch(e){
+                    context.commit('setAuthIsReady',true)
+                    context.commit("cookieDelete")
+                    throw("no valid token")        
+                }
+            } else {
+                context.commit('setAuthIsReady',true)
+                throw("no valid token")       
+            }
+            // const cookies = document.cookie.split(';')
+            // await context.dispatch('cookieExist',{key:'refresh_token'})
+            // .then(async (res) => {
+            //     if(res!==undefined){
+            //         console.log("refresh_true")
+            //         const refresh_token = cookies.map((value) => {
+            //             const contentArray = value.split('=')
+            //             const isTrue = contentArray.find(e => e.includes('refresh_token'))
+            //             if(isTrue) {
+            //                 return contentArray[1]
+            //             }
+            //         }).find(v => v != undefined)
+            //         if(refresh_token!=undefined) {
+            //             console.log("RT",refresh_token)
+            //             try{
+            //                 await axios({
+            //                     method: 'post',
+            //                     url: '/api/auth/token/refresh/',
+            //                     data: {
+            //                         'refresh':refresh_token
+            //                     }
+            //                 })
+            //                 .then((res) => {
+            //                     console.log("RF", res)
+            //                     const token = {
+            //                         access_token:res.data.access,
+            //                         refresh_token:res.data.refresh
+            //                     }
+            //                     console.log(token)
+            //                     context.commit("setTokens", token)   
+            //                 })
+            //             }
+            //             catch(e){
+            //                 context.commit('setAuthIsReady',true)
+            //                 context.commit("cookieDelete")
+            //                 throw("no valid token")        
+            //             }
+            //         }
+            //     } else {
+            //         context.commit('setAuthIsReady',true)
+            //         throw("no valid token")       
+            //     }
+            // })                
+        },
+        getAccessTokenFromCookies(state) {
+            // const token = Cookies.get('tokens').accessToken
+            return state.accessToken
+            // const cookies = document.cookie.split(';')
+            // return cookies.map((value) => {
+            //     const contentArray = value.split('=')
+            //     const isTrue = contentArray.find(e => e.includes('access_token'))
+            //     if(isTrue) {
+            //         return contentArray[1]
+            //     }
+            // }).find(v => v != undefined)
+        },
+        async retryFetch(context, payload) {
+            // when get returned invalid token error with access_token, 
+            // try to get accesss_token with refresh_token, and try again.
+            // the payload must include a function as func you want to retry 
+            // and arguments as args for it.
+            await context.dispatch("GetAccessTokenFromRefreshToken")
+            .then(() => {
+                const fun = payload.fun
+                const args = payload.args
+                context.dispatch(fun,args)
+            })
+        },
+        async emailVerify(content,payload) {
+            // console.log("EV",payload)
+            // const UID = jwt_decode(payload).user_id 
+            // this.$store.commit('setIsLoading', true)
+            await axios.get( '/api/email-verify/',{
+                withCredentials: true,
+                headers: {
+                    "Authorization": 'JWT ' + `${payload}`,
+                    "Content-Type":"aplication/json"
+                }
+            })
+            .then(async (res) => {
+                console.log("THEN",res)
+                if(res.data.verification) {
+                    console.log("VER",res.data.tokens)
+                    content.commit("setTokens",res.data.tokens)
+                    content.dispatch("getUserData")
+                    .then(() => {
+                      router.push({ name: 'Account' })
+                    })
+                }  else if(!res.data.verification) {
+                    console.log("something went wrong")
+                }
+            })
+            .catch((e) => {
+                console.log("error",e)
+                
+                if("token_not_pass" in e.response.data ) {
+                    console.log("ERR expired",e.response.data.message)
+                    this.tokenError = true
+                }
+            })
+            // this.$store.commit('setIsLoading', false)
+        },
+        handleTokenError(context, payload) {
+            if(payload.message==="Your token is expired") {
+                debugger
+                return true
+            } else {
+                return false
+            }
+        },
+        cookieExist(context, payload) {
+
+            const cookies = document.cookie.split(';')
+            console.log("COOkies",cookies)
+            const key = payload.key
+            console.log("key",key)
+            const result = cookies.map((value) => {
+                const contentArray = value.split('=')
+                return contentArray.find(e => e.includes(key))
+                
+            }).find(v => v != undefined)
+            console.log("PAY",payload)
+            if('delete' in payload){
+                 
+            }
+            console.log("result", result)
+            return result === key
+        },
+        cookieDelete(context, payload) {
+            // this execute after cookieExist
+            // Cookies.remove('tokens')
+            // const cookies = document.cookie.split(';')
+            // const key = payload.key
+            // const isArray = Array.isArray(key)
+            // const del = (arg) => {
+            //     return cookies.map((value) => {
+            //         const contentArray = value.split('=')
+            //         const isTrue = contentArray.find(e => e.includes(arg))
+            //         if(isTrue) {
+            //             document.cookie = `${arg} = ${contentArray[1]};max-age=0`
+            //             return {"deleted": true}
+            //         } else {
+            //             return {"deleted": false}
+            //         }
+            //     }).find(v => v != undefined)
+            // }
+            // if(!isArray) {
+            //     return del(key)
+            // } else {
+            //     const result = key.map((k) => {
+            //         const deleted = del(k)
+            //         return deleted.deleted ? deleted : undefined
+            //     }).find(v => v != undefined)
+            //     return result
+            // }
+        },
+        async signupuser( {state, commit},payload ){
             console.log("INSDU",payload)
             try{
                 // throw new Error('could not sent validation')
@@ -351,7 +716,7 @@ export default {
                     data: payload
                 })
                 .then(response => {
-                    commit('setDjangoUser',response.data)
+                    commit('setuser',response.data)
                 })
                 state.beingException = false
                 commit("resetDjangoError")
@@ -361,7 +726,7 @@ export default {
             catch(e){
                 state.userInfo = payload
                 let logger = {
-                    message: "in store/signup.SignupDjangoUser. couldn't signup django user",
+                    message: "in store/signup.Signupuser. couldn't signup django user",
                     path: window.location.pathname,
                     actualErrorName: e.name,
                     actualErrorMessage: e.message,
@@ -372,10 +737,10 @@ export default {
                 commit("checkDjangoError", e.message)
             }
         },
-        async signupDjangoUserForException( {state, commit},payload ){
+        async signupuserForException( {state, commit},payload ){
             // this is only for unsub below. dont use other part
             console.log("INSDUFX")
-            if(!state.djangoUser&&state.beingException){
+            if(!state.user&&state.beingException){
                 if(state.userInfo){
                     try{
                         // throw new Error('could not sent validation')
@@ -385,7 +750,7 @@ export default {
                             data: state.userInfo
                         })
                         .then(response => {
-                            commit('setDjangoUser',response.data)
+                            commit('setuser',response.data)
                         })
                         state.beingException = false
                         commit('resetDjangoError')
@@ -396,7 +761,7 @@ export default {
                         console.log('catchdayo',e.message)
                         commit("checkDjangoError", e.message)
                         let logger = {
-                            message: "in store/signup.SignupDjangoUserException1. couldn't signup django user",
+                            message: "in store/signup.SignupuserException1. couldn't signup django user",
                             name: window.location.pathname,
                             actualErrorName: e.name,
                             actualErrorMessage: e.message,
@@ -432,7 +797,7 @@ export default {
                     catch(e){
                         commit("checkDjangoError", e.message)
                         let logger = {
-                            message: "in store/signup.SignupDjangoUserException2. couldn't signup django user",
+                            message: "in store/signup.SignupuserException2. couldn't signup django user",
                             path: window.location.pathname,
                             actualErrorName: e.name,
                             actualErrorMessage: e.message,
@@ -455,7 +820,7 @@ export default {
                     catch(e){
                         commit("checkDjangoError", e.message)
                         let logger = {
-                            message: "in store/signup.SignupDjangoUserException3. couldn't signup django user",
+                            message: "in store/signup.SignupuserException3. couldn't signup django user",
                             path: window.location.pathname,
                             actualErrorName: e.name,
                             actualErrorMessage: e.message,
@@ -466,7 +831,7 @@ export default {
                 }   
             }
         },
-        async signupDjangoUserForThirdParty( {state, commit, dispatch},payload ){
+        async signupuserForThirdParty( {state, commit, dispatch},payload ){
             console.log("INSDUTH",payload)
             try{
                 await axios({
@@ -478,9 +843,9 @@ export default {
                     if(response.status==222){
                         console.log('response222')
                         commit('resetPhotoURL')
-                        commit('setDjangoUser',response.data)
+                        commit('setuser',response.data)
                     }else{
-                        commit('setDjangoUser',response.data)
+                        commit('setuser',response.data)
                     }
                 })
                 // state.beingException = false
@@ -497,7 +862,7 @@ export default {
                 // }
                 // else{
                 let logger = {
-                    message: "in store/signup.SignupDjangoUserFoeThirdParty. couldn't signup django user",
+                    message: "in store/signup.SignupuserFoeThirdParty. couldn't signup django user",
                     path: window.location.pathname,
                     actualErrorName: e.name,
                     actualErrorMessage: e.message,
@@ -524,7 +889,7 @@ export default {
         //             console.log(err)
         //         })
         // },
-        async getDjangoUser({ state, commit,dispatch }){
+        async getuser({ state, commit}){
             // commit('setIsLoading', true, {root:true})
             if(state.user&&!state.beingException){
                 console.log('GDU_pass',state.beingException)
@@ -532,7 +897,7 @@ export default {
                     await axios
                     .get(`/api/user/${state.user.uid}`,{ withCredentials: true })
                     .then(response => {
-                        commit('setDjangoUser',response.data)
+                        commit('setuser',response.data)
                         state.myQuestion = response.data.my_quiz[0].my_question
                         state.myQuizInfo.id = response.data.my_quiz[0].id
                         state.myQuizInfo.max = response.data.my_quiz[0].max_num
@@ -543,7 +908,7 @@ export default {
                 catch(e){
                     console.log('catch')
                     let logger = {
-                        message: "in store/signup.getDjangoUser. couldn't signup django user",
+                        message: "in store/signup.getuser. couldn't signup django user",
                         path: window.location.pathname,
                         actualErrorName: e.name,
                         actualErrorMessage: e.message,
@@ -556,9 +921,9 @@ export default {
         },
         async getFavoriteQuestion({ state, commit }){
             state.favoriteQuestion = null
-            if(state.djangoUser&&state.djangoUser.favorite_question.length){
+            if(state.user&&state.user.favorite_question.length){
                 const questionId = []
-                for(let i of state.djangoUser.favorite_question[0].question){
+                for(let i of state.user.favorite_question[0].question){
                     console.log('GFQQQQQ',i)
                     questionId.push(i)
                 }
@@ -594,7 +959,7 @@ export default {
         //         catch(e){
         //             console.log('catch',e)
         //             // let logger = {
-        //             //     message: "in store/signup.getDjangoUser. couldn't signup django user",
+        //             //     message: "in store/signup.getuser. couldn't signup django user",
         //             //     name: window.location.pathname,
         //             //     actualErrorName: e.name,
         //             //     actualErrorMessage: e.message,
@@ -604,121 +969,131 @@ export default {
         //         }
             
         // },
-        async signup(context, {email,password}){
-            console.log('signup in')
-            try {
-                const ref = await createUserWithEmailAndPassword(auth, email, password)
-                context.state.actionCodeSettings['url'] = context.state.accountURL
-                sendEmailVerification(ref.user,context.state.actionCodeSettings)
-                context.commit('setUser',ref.user)
-                context.commit('emailVerifiedHandler',ref.user.emailVerified)
-                console.log('signup is done',auth.currentUser)
-            }catch(e){
-                let logger = {
-                    message: "in store/signup.signup. couldn't signup firebase user",
-                    name: window.location.pathname,
-                    actualErrorName: e.code,
-                    actualErrorMessage: e.message,
-                }
-                context.commit('setLogger',logger)
-                router.push({ name: 'NotFound404' })
-            }
-        },
-        async googleLogin(context){
-            const provider = new GoogleAuthProvider();
-            const auth = getAuth();
-            signInWithPopup(auth, provider)
-            .then((result) => {
-                // This gives you a Google Access Token. You can use it to access the Google API.
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const token = credential.accessToken;
-                // The signed-in user info.
-                context.commit('setPhotoURL',result.user.photoURL)
-                context.commit('setUser',result.user)
-                context.commit('emailVerifiedHandler',result.user.emailVerified)
-                context.commit('setTirdPartyLoginData',result.user)
-                context.dispatch('getIpData')
-            }).catch((e) => {
-                console.log(e.code)
-                if(e.code == 'auth/popup-closed-by-user'||'auth/cancelled-popup-request') {
-                    return 
-                }
-                let logger = {
-                    message: "in store/signup.googleLogin. couldn't Login firebase user",
-                    name: window.location.pathname,
-                    actualErrorName: e.code,
-                    actualErrorMessage: e.message,
-                }
-                context.commit('setLogger',logger)
-                router.push({ name: 'ConnectionError' })
-                // Handle Errors here.
-                const errorCode = e.code;
-                const errorMessage = e.message;
-                // The email of the user's account used.
-                const email = e.email;
-                // The AuthCredential type that was used.
-                const credential = GoogleAuthProvider.credentialFromError(e);
-                // ...
-            });
-        },
-        async sendEmailVerify(context){
-            context.state.actionCodeSettings['url'] = context.state.accountURL
-            console.log('sendEmail',context.state.user,context.state.actionCodeSettings)
-            await sendEmailVerification(context.state.user,context.state.actionCodeSettings)
-        },
-        async sentValidation(context){
-            console.log('insentV')
-            try{
-                await context.state.user.sendEmailVerification()
-            }catch(e){
-                let logger = {
-                    message: "in store/signup.sendEmailVerify. couldn't send EmailVerify",
-                    name: window.location.pathname,
-                    actualErrorName: e.code,
-                    actualErrorMessage: e.message,
-                }
-                context.commit('setLogger',logger)
-                router.push({ name: 'ConnectionError' })
-            }
-        },
-        async login(context, {email,password}){
-            // context.commit('setIsLoading', true, {root:true})
-            console.log('in_login')
-            try{
-                var ref = await signInWithEmailAndPassword(auth, email, password)
-            }catch (e){
-                let logger = {
-                    message: "in store/signup.login. couldn't login Google-account",
-                    name: window.location.pathname,
-                    actualErrorName: e.code,
-                    actualErrorMessage: e.message,
-                }
-                context.commit('setLogger',logger)
-                router.push({ name: 'ConnectionError' })
-            }
-            if(ref){
-                console.log("IF YES")
-                context.commit('setUser',ref.user)
-                context.dispatch('getDjangoUser')
-                context.commit("setTempUserReset")
-                context.commit('emailVerifiedHandler',ref.user.emailVerified)
-                console.log(context.state.user,context.state.emailVerified)
-            }else{
-                let logger = {
-                    message: "in store/signup.login. couldn't login Google-account",
-                    name: window.location.pathname,
-                    actualErrorName: '',
-                    actualErrorMessage: '',
-                }
-                context.commit('setLogger',logger)
-                router.push({ name: 'ConnectionError' })
-            }
-            // context.commit('setIsLoading', false, {root:true})                
-        },
+        // async signup(context, {email,password}){
+        //     console.log('signup in')
+        //     try {
+        //         const ref = await createUserWithEmailAndPassword(auth, email, password)
+        //         context.state.actionCodeSettings['url'] = context.state.accountURL
+        //         sendEmailVerification(ref.user,context.state.actionCodeSettings)
+        //         context.commit('setUser',ref.user)
+        //         context.commit('emailVerifiedHandler',ref.user.emailVerified)
+        //         console.log('signup is done',auth.currentUser)
+        //     }catch(e){
+        //         let logger = {
+        //             message: "in store/signup.signup. couldn't signup firebase user",
+        //             name: window.location.pathname,
+        //             actualErrorName: e.code,
+        //             actualErrorMessage: e.message,
+        //         }
+        //         context.commit('setLogger',logger)
+        //         router.push({ name: 'NotFound404' })
+        //     }
+        // },
+        // async googlelogin(context){
+        //     const provider = new GoogleAuthProvider();
+        //     const auth = getAuth();
+        //     signInWithPopup(auth, provider)
+        //     .then((result) => {
+        //         // This gives you a Google Access Token. You can use it to access the Google API.
+        //         const credential = GoogleAuthProvider.credentialFromResult(result);
+        //         const token = credential.accessToken;
+        //         // The signed-in user info.
+        //         context.commit('setPhotoURL',result.user.photoURL)
+        //         context.commit('setUser',result.user)
+        //         context.commit('emailVerifiedHandler',result.user.emailVerified)
+        //         context.commit('setTirdPartyloginData',result.user)
+        //         context.dispatch('getIpData')
+        //     }).catch((e) => {
+        //         console.log(e.code)
+        //         if(e.code == 'auth/popup-closed-by-user'||'auth/cancelled-popup-request') {
+        //             return 
+        //         }
+        //         let logger = {
+        //             message: "in store/signup.googlelogin. couldn't login firebase user",
+        //             name: window.location.pathname,
+        //             actualErrorName: e.code,
+        //             actualErrorMessage: e.message,
+        //         }
+        //         context.commit('setLogger',logger)
+        //         router.push({ name: 'ConnectionError' })
+        //         // Handle Errors here.
+        //         const errorCode = e.code;
+        //         const errorMessage = e.message;
+        //         // The email of the user's account used.
+        //         const email = e.email;
+        //         // The AuthCredential type that was used.
+        //         const credential = GoogleAuthProvider.credentialFromError(e);
+        //         // ...
+        //     });
+        // },
+        // async sendEmailVerify(context){
+        //     context.state.actionCodeSettings['url'] = context.state.accountURL
+        //     console.log('sendEmail',context.state.user,context.state.actionCodeSettings)
+        //     await sendEmailVerification(context.state.user,context.state.actionCodeSettings)
+        // },
+        // async sentValidation(context){
+        //     console.log('insentV')
+        //     try{
+        //         await context.state.user.sendEmailVerification()
+        //     }catch(e){
+        //         let logger = {
+        //             message: "in store/signup.sendEmailVerify. couldn't send EmailVerify",
+        //             name: window.location.pathname,
+        //             actualErrorName: e.code,
+        //             actualErrorMessage: e.message,
+        //         }
+        //         context.commit('setLogger',logger)
+        //         router.push({ name: 'ConnectionError' })
+        //     }
+        // },
+        // async login(context, {email,password}){
+        //     // context.commit('setIsLoading', true, {root:true})
+        //     console.log('in_login')
+        //     try{
+        //         var ref = await signInWithEmailAndPassword(auth, email, password)
+        //     }catch (e){
+        //         let logger = {
+        //             message: "in store/signup.login. couldn't login Google-account",
+        //             name: window.location.pathname,
+        //             actualErrorName: e.code,
+        //             actualErrorMessage: e.message,
+        //         }
+        //         context.commit('setLogger',logger)
+        //         router.push({ name: 'ConnectionError' })
+        //     }
+        //     if(ref){
+        //         console.log("IF YES")
+        //         context.commit('setUser',ref.user)
+        //         context.dispatch('getuser')
+        //         context.commit("setTempUserReset")
+        //         context.commit('emailVerifiedHandler',ref.user.emailVerified)
+        //         console.log(context.state.user,context.state.emailVerified)
+        //     }else{
+        //         let logger = {
+        //             message: "in store/signup.login. couldn't login Google-account",
+        //             name: window.location.pathname,
+        //             actualErrorName: '',
+        //             actualErrorMessage: '',
+        //         }
+        //         context.commit('setLogger',logger)
+        //         router.push({ name: 'ConnectionError' })
+        //     }
+        //     // context.commit('setIsLoading', false, {root:true})                
+        // },
         async checkEmail(context,email){
+            console.log("ML",email)
             try {
-                const ref = await fetchSignInMethodsForEmail(auth,email);
-                if (ref == 'password'){
+                const result = await axios({
+                    method: 'post',
+                    url: '/api/user-exists/',
+                    data: {
+                        "email": email,
+
+                    },
+                })
+                .then(res => {return res.data})
+                console.log(result)
+                if (result.exists){
                     context.commit('checkEmailHandler',false)
                     console.log('already in use')
                 }else{
@@ -726,62 +1101,47 @@ export default {
                     console.log('you can use it')
                 }
             }catch(e){
+                console.log(e)
                 let logger = {
                     message: "in store/signup.checkEmail. couldn't check Email",
                     name: window.location.pathname,
                     actualErrorName: e.code,
                     actualErrorMessage: e.message,
                 }
-                context.commit('setLogger',logger)
-                router.push({ name: 'ConnectionError' })
+                // context.commit('setLogger',logger)
+                // router.push({ name: 'ConnectionError' })
             }
         },
-        async passwordReset(context,email){
-            console.log('passreset action',email)
-            try{
-                context.state.actionCodeSettings['url'] = context.state.accountURL
-                await sendPasswordResetEmail(auth,email,context.state.actionCodeSettings)
-            console.log('password reset sent')
-        }catch(e){
-            let logger = {
-                message: "in store/signup.passwordReset. couldn't sent pass reset",
-                name: window.location.pathname,
-                actualErrorName: e.code,
-                actualErrorMessage: e.message,
-            }
-            context.commit('setLogger',logger)
-            router.push({ name: 'ConnectionError' })
-            }
-        },
-        async logout(context){
-            try{
-                await signOut(auth)
-                context.commit('setUser',null)
-                context.commit('resetQuizKeyStorage')
-                router.push({ name: 'Home' })
-            } catch(e) {
-                let logger = {
-                    message: "in store/signup.logout. couldn't logout",
-                    name: window.location.pathname,
-                    actualErrorName: e.code,
-                    actualErrorMessage: e.message,
-                }
-                context.commit('setLogger',logger)
-                router.push({ name: 'ConnectionError' })
-            }
-        },
+        // async passwordReset(context,email){
+        //     console.log('passreset action',email)
+        //     try{
+        //         context.state.actionCodeSettings['url'] = context.state.accountURL
+        //         await sendPasswordResetEmail(auth,email,context.state.actionCodeSettings)
+        //     console.log('password reset sent')
+        // }catch(e){
+        //     let logger = {
+        //         message: "in store/signup.passwordReset. couldn't sent pass reset",
+        //         name: window.location.pathname,
+        //         actualErrorName: e.code,
+        //         actualErrorMessage: e.message,
+        //     }
+        //     context.commit('setLogger',logger)
+        //     router.push({ name: 'ConnectionError' })
+        //     }
+        // },
+        
         updateQuizTakerAction({state, commit, getters},payload){
             console.log('inUQTA',getters)
             commit('updateQuizTaker',payload);
             console.log('UPaction',getters.quizNameIdInSignup)
             for(let i of getters.quizNameIdInSignup){
                 if(i.id == payload.grade){
-                    if(state.gradeDict[state.djangoUser.quiz_taker[0].max_grade] < state.gradeDict[i.name]){
+                    if(state.gradeDict[state.user.quiz_taker[0].max_grade] < state.gradeDict[i.name]){
                         commit('updateQuizTakerMax',i.name);
                         break
                     }
-                    else if(state.gradeDict[state.djangoUser.quiz_taker[0].max_grade] == state.gradeDict[i.name]){
-                        if(state.djangoUser.quiz_taker[0].max_level < payload.level){
+                    else if(state.gradeDict[state.user.quiz_taker[0].max_grade] == state.gradeDict[i.name]){
+                        if(state.user.quiz_taker[0].max_level < payload.level){
                             commit('updateQuizTakerMax',i.name);
                             break
                         }
@@ -789,8 +1149,8 @@ export default {
                 }
             }
         },
-        async getOrSignupDjangoUserForThirdParty(context){
-            await context.dispatch('signupDjangoUserForThirdParty',context.getters.getUserInfo)
+        async getOrSignupuserForThirdParty(context){
+            await context.dispatch('signupuserForThirdParty',context.getters.getUserInfo)
             router.push({ name: 'Account' })
         },
         async getIpData(context){
@@ -798,7 +1158,7 @@ export default {
             .get("https://ipinfo.io/json?token=32e16159d962c5")
             .then(response => {
                 context.commit('setIpData',response.data)
-                context.dispatch('getOrSignupDjangoUserForThirdParty')
+                context.dispatch('getOrSignupuserForThirdParty')
                 
             })
             .catch((e) => {
@@ -835,7 +1195,7 @@ export default {
             }
         },
         // async patchImage(context){
-        //     var list = context.getters.getDjangouser.thumbnail.split('/')
+        //     var list = context.getters.getuser.thumbnail.split('/')
         //     console.log('list',list)
         //     if(list.includes('default.png')&&context.getters.getPhotoURL){
         //         console.log('png');
@@ -844,26 +1204,29 @@ export default {
         //         const formData = new FormData();
         //         formData.append('thumbnail',blob,`${blob}.png`)
         //         console.log('getthumb',formData.get('thumbnail'),formData),
-        //         axios.patch(`/api/user/${context.getters.getDjangouser.UID}`,
+        //         axios.patch(`/api/user/${context.getters.getuser.UID}`,
         //             formData,
         //             {headers}
         //         )
         //     }
         // },
+        aurhStatusChange(context) {
+            context.commit('setAuthIsReady',true)
+        }
     }
 }
-const unsub = onAuthStateChanged(auth,(user) =>{
-    store.commit('setAuthIsReady',true)
-    store.commit('setUser',user)
-    console.log('unsub',user)
-    store.dispatch('createLog')
-    // store.dispatch('getToken')
-    if(user){
-        store.dispatch('getDjangoUser')
-        store.commit('emailVerifiedHandler',user.emailVerified)
-        store.dispatch('signupDjangoUserForException')
-    }else{
-        store.commit('resetQuizKeyStorage')
-    }
-    unsub()
-})
+// const unsub = onAuthStateChanged(auth,(user) =>{
+//     store.commit('setAuthIsReady',true)
+//     store.commit('setUser',user)
+//     console.log('unsub',user)
+//     store.dispatch('createLog')
+//     // store.dispatch('getToken')
+//     if(user){
+//         store.dispatch('getuser')
+//         store.commit('emailVerifiedHandler',user.emailVerified)
+//         store.dispatch('signupuserForException')
+//     }else{
+//         store.commit('resetQuizKeyStorage')
+//     }
+//     unsub()
+// })

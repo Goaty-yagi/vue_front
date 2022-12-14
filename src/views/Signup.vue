@@ -214,6 +214,7 @@ export default {
         async submitForm(){
             // validate email
             // console.log('clicked1')
+            this.mailInUseError = ''
             this.nameError = this.userData.username.length < 21 ?
             '' : '@name must be less than 20 chars'
             this.mailError = this.userData.email == this.userData.email2 ?
@@ -221,10 +222,8 @@ export default {
             console.log(this.nameError)
             if (this.nameError == ''&& this.mailError ==''){
                 await this.$store.dispatch('checkEmail',this.userData.email)
-                console.log(this.$store.state.signup.checkedEmail)
                 this.mailInUseError = this.$store.state.signup.checkedEmail ?
                 '' : '@address is already in use'
-                console.log(this.mailInUseError)
                 if (this.$store.state.signup.checkedEmail == true){
                 // this.showSentHandler()
                 this.handleSlide()
