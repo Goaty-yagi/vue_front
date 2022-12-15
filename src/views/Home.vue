@@ -150,31 +150,6 @@ export default {
         }
     },
     mounted(){  
-        // this.test()
-        // this.reload()
-        // this.aaa()
-        // this.client = google.accounts.oauth2.initTokenClient({
-        // client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
-        // scope: 'https://www.googleapis.com/auth/userinfo.email',
-        // redirect_uri:'http://127.0.0.1:8000/api/user-google/',
-        // // ux_mode: 'redirect',
-        // ux_mode: 'popup',
-//         callback: (response) => { this.callback(response)
-//   },
-//       })
- 
-        // const regionNames = new Intl.DisplayNames(['jp'], { type: 'region' });
-        // this.googleInstance = google.accounts.id.initialize({
-        //     client_id: "510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com",
-        //     scope: 'https://www.googleapis.com/auth/calendar.readonly \
-        //           https://www.googleapis.com/auth/contacts.readonly',
-        //     redirect_uri:'http://127.0.0.1:8000/api/user-google/',
-        //     callback: this.callback
-        // })
-        // google.accounts.id.renderButton(
-        //     document.querySelector("#google"),
-        //     {theme:"outline", size: "large"}
-        // )
         console.log('mounted',document.cookie.split(';'))
         const cookies = document.cookie.split(';')
         const refresh_token = cookies.map((value) => {

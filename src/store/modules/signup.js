@@ -13,7 +13,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  GoogleAuthProvider,
+  fromAuthProvider,
   signInWithPopup,
   getAuth,
 } from 'firebase/auth'
@@ -87,6 +87,8 @@ export default {
         thirdPartyError:'',
         photoURL:'',
         countryData:'',
+        fromLogin:false,
+        tokenError:false,
         accessToken:'',
         refreshToken:''     
     },
@@ -129,6 +131,9 @@ export default {
         },
         getPhotoURL(state){
             return state.photoURL
+        },
+        getTokenError(state) {
+            return state.tokenError
         }
     },
     mutations:{
@@ -348,7 +353,6 @@ export default {
             // if(payload.refresh_token){
             //     console.log("refresh", jwt_decode(payload.refresh_token))
             // }
-            console.log('pay', payload)
             // Cookies.set('access_token', payload.access_token)
             // Cookies.set('refresh_token', payload.refresh_token)
             state.accessToken =  payload.access_token
@@ -360,6 +364,12 @@ export default {
         cookieDelete(state) {
             state.accessToken = ''
             state.refreshToken = ''
+        },
+        handleFromLogin(state) {
+            state.fromLogin = !state.fromLogin
+        },
+        handleTokenError(state) {
+            state.tokenError = !state.tokenError
         }
         // setPayloadForRetryFetch(payload) {
         //     // payload must be array
@@ -375,19 +385,19 @@ export default {
         // }
     },
     actions:{
-        async googleLogin(context,payload ){
-            console.log("in GOOGLE login", payload)
-            const googleloginConf =
-            google.accounts.oauth2.initTokenClient({
-                client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
-                scope: 'https://www.googleapis.com/auth/userinfo.email',
-                // redirect_uri:'http://127.0.0.1:8000/api/user-google/',
+        async fromLogin(context,payload ){
+            console.log("in from login", payload)
+            const fromloginConf =
+            from.accounts.oauth2.initTokenClient({
+                client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.fromusercontent.com',
+                scope: 'https://www.fromapis.com/auth/userinfo.email',
+                // redirect_uri:'http://127.0.0.1:8000/api/user-from/',
                 // // ux_mode: 'redirect',
                 // ux_mode: 'popup',
-                callback: (response) => {context.dispatch("googleloginCallback", response)},
+                callback: (response) => {context.dispatch("fromloginCallback", response)},
             })
             try{
-                googleloginConf.requestAccessToken()
+                fromloginConf.requestAccessToken()
                 // throw new Error('could not sent validation')
                 // await axios({
                 //     method: 'post',
@@ -406,21 +416,22 @@ export default {
                 console.log("ERROR",e)
             }
         },
-        async googleloginCallback(context, response){
-            console.log("c=allback")
-            const googleAccessToken = response.access_token
+        async fromloginCallback(context, response){
+            
+            const fromAccessToken = response.access_token
             await axios({
                 method: 'post',
-                url: '/api/user-google/',
+                url: '/api/user-from/',
                 withCredentials: true,
                 data: {
-                    access_token: googleAccessToken,
+                    access_token: fromAccessToken,
                 },
                 
             })
             .then(async (res) => {
                 context.commit("setTokens", res.data)   
-                console.log("then", res.data)             
+                console.log("then", res.data)
+                context.commit('handleFromLogin')           
                 await context.dispatch("getUserData")
                 console.log("dispatch done", context.state.user)
                 if(context.state.tempUser.test) {
@@ -456,6 +467,11 @@ export default {
                             console.log("USER",res.data.is_active)
                             context.commit('emailVerifiedHandler',res.data.is_active)
                             context.commit('setAuthIsReady',true)
+                            console.log("login")
+                            if(context.state.fromLogin){
+                                router.push({ name: 'Account' })
+                                context.commit('handleFromLogin')
+                            }
                         })
                         .catch((e) => {
                             console.log("error",e.response)
@@ -465,8 +481,8 @@ export default {
                                     fun: 'getUserData',
                                     args: UID
                                 }
-                                // console.log("self",self.name)
-                                // context.dispatch('retryFetch',newPayload)
+                                console.log("self",self.name)
+                                context.dispatch('retryFetch',newPayload)
                             }
                         })
                     }
@@ -495,16 +511,28 @@ export default {
             })
             .then((res) => {
                 const UID = res.data.user.pk
-
+                context.commit('handleFromLogin')
                 context.commit("setTokens", res.data)                
                 context.dispatch("getUserData", UID)
 
             })
+            .catch((e) =>{
+                let logger = {
+                    message: "in store/signup.login. couldn't login user",
+                    path: window.location.pathname,
+                    actualErrorName: e.name,
+                    actualErrorMessage: e.message,
+
+                }
+                commit('setLogger',logger)
+                commit("checkDjangoError", e.message)
+            })       
+            
               
         },
         async logout(context){
             try{
-                await signOut(auth)
+                // await signOut(auth)
                 context.commit('setUser',null)
                 context.commit('resetQuizKeyStorage')
                 context.commit('cookieDelete')
@@ -528,7 +556,7 @@ export default {
                         method: 'post',
                         url: '/api/auth/token/refresh/',
                         data: {
-                            'refresh':refresh_token
+                            'refresh':context.state.refreshToken
                         }
                     })
                     .then((res) => {
@@ -542,11 +570,13 @@ export default {
                     })
                 }
                 catch(e){
+                    console.log("E",e)
                     context.commit('setAuthIsReady',true)
                     context.commit("cookieDelete")
                     throw("no valid token")        
                 }
             } else {
+                console.log("no refreshtoken")
                 context.commit('setAuthIsReady',true)
                 throw("no valid token")       
             }
@@ -618,23 +648,22 @@ export default {
                 context.dispatch(fun,args)
             })
         },
-        async emailVerify(content,payload) {
+        async emailVerify(context,payload) {
             // console.log("EV",payload)
             // const UID = jwt_decode(payload).user_id 
             // this.$store.commit('setIsLoading', true)
-            await axios.get( '/api/email-verify/',{
+            await axios.post( '/api/email-verify/',{
                 withCredentials: true,
+                data:payload,
                 headers: {
-                    "Authorization": 'JWT ' + `${payload}`,
                     "Content-Type":"aplication/json"
                 }
             })
             .then(async (res) => {
                 console.log("THEN",res)
                 if(res.data.verification) {
-                    console.log("VER",res.data.tokens)
-                    content.commit("setTokens",res.data.tokens)
-                    content.dispatch("getUserData")
+                    context.commit("setTokens",res.data.tokens)
+                    context.dispatch("getUserData")
                     .then(() => {
                       router.push({ name: 'Account' })
                     })
@@ -643,14 +672,44 @@ export default {
                 }
             })
             .catch((e) => {
-                console.log("error",e)
-                
-                if("token_not_pass" in e.response.data ) {
-                    console.log("ERR expired",e.response.data.message)
-                    this.tokenError = true
+                let logger = {
+                    message: "in store/signup.emailVerify. couldn't verify user",
+                    path: window.location.pathname,
+                    actualErrorName: e.name,
+                    actualErrorMessage: e.message,
+
                 }
+                console.log('error',e)
+                commit('setLogger',logger)
+                commit("checkDjangoError", e.message)
+                // if("token_not_pass" in e.response.data ) {
+                //     console.log("ERR expired",e.response.data.message)
+                //     context.commit("handleTokenError")
+                // }
             })
             // this.$store.commit('setIsLoading', false)
+        },
+        async userCreate(content, payload) {
+            await axios({
+                method:"post",
+                url: "api/user-create/",
+                data: payload
+            })
+            .then(response => {
+                commit('setuser',response.data)
+            })
+            .catch((e) =>{
+                let logger = {
+                    message: "in store/signup.userCreate. couldn't create django user",
+                    path: window.location.pathname,
+                    actualErrorName: e.name,
+                    actualErrorMessage: e.message,
+
+                }
+                console.log('error',e)
+                commit('setLogger',logger)
+                commit("checkDjangoError", e.message)
+            })            
         },
         handleTokenError(context, payload) {
             if(payload.message==="Your token is expired") {
@@ -660,24 +719,24 @@ export default {
                 return false
             }
         },
-        cookieExist(context, payload) {
+        // cookieExist(context, payload) {
 
-            const cookies = document.cookie.split(';')
-            console.log("COOkies",cookies)
-            const key = payload.key
-            console.log("key",key)
-            const result = cookies.map((value) => {
-                const contentArray = value.split('=')
-                return contentArray.find(e => e.includes(key))
+        //     const cookies = document.cookie.split(';')
+        //     console.log("COOkies",cookies)
+        //     const key = payload.key
+        //     console.log("key",key)
+        //     const result = cookies.map((value) => {
+        //         const contentArray = value.split('=')
+        //         return contentArray.find(e => e.includes(key))
                 
-            }).find(v => v != undefined)
-            console.log("PAY",payload)
-            if('delete' in payload){
+        //     }).find(v => v != undefined)
+        //     console.log("PAY",payload)
+        //     if('delete' in payload){
                  
-            }
-            console.log("result", result)
-            return result === key
-        },
+        //     }
+        //     console.log("result", result)
+        //     return result === key
+        // },
         cookieDelete(context, payload) {
             // this execute after cookieExist
             // Cookies.remove('tokens')
@@ -989,13 +1048,13 @@ export default {
         //         router.push({ name: 'NotFound404' })
         //     }
         // },
-        // async googlelogin(context){
-        //     const provider = new GoogleAuthProvider();
+        // async fromlogin(context){
+        //     const provider = new fromAuthProvider();
         //     const auth = getAuth();
         //     signInWithPopup(auth, provider)
         //     .then((result) => {
-        //         // This gives you a Google Access Token. You can use it to access the Google API.
-        //         const credential = GoogleAuthProvider.credentialFromResult(result);
+        //         // This gives you a from Access Token. You can use it to access the from API.
+        //         const credential = fromAuthProvider.credentialFromResult(result);
         //         const token = credential.accessToken;
         //         // The signed-in user info.
         //         context.commit('setPhotoURL',result.user.photoURL)
@@ -1009,7 +1068,7 @@ export default {
         //             return 
         //         }
         //         let logger = {
-        //             message: "in store/signup.googlelogin. couldn't login firebase user",
+        //             message: "in store/signup.fromlogin. couldn't login firebase user",
         //             name: window.location.pathname,
         //             actualErrorName: e.code,
         //             actualErrorMessage: e.message,
@@ -1022,7 +1081,7 @@ export default {
         //         // The email of the user's account used.
         //         const email = e.email;
         //         // The AuthCredential type that was used.
-        //         const credential = GoogleAuthProvider.credentialFromError(e);
+        //         const credential = fromAuthProvider.credentialFromError(e);
         //         // ...
         //     });
         // },
@@ -1053,7 +1112,7 @@ export default {
         //         var ref = await signInWithEmailAndPassword(auth, email, password)
         //     }catch (e){
         //         let logger = {
-        //             message: "in store/signup.login. couldn't login Google-account",
+        //             message: "in store/signup.login. couldn't login from-account",
         //             name: window.location.pathname,
         //             actualErrorName: e.code,
         //             actualErrorMessage: e.message,
@@ -1070,7 +1129,7 @@ export default {
         //         console.log(context.state.user,context.state.emailVerified)
         //     }else{
         //         let logger = {
-        //             message: "in store/signup.login. couldn't login Google-account",
+        //             message: "in store/signup.login. couldn't login from-account",
         //             name: window.location.pathname,
         //             actualErrorName: '',
         //             actualErrorMessage: '',

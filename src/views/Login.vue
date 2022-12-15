@@ -128,14 +128,13 @@ export default {
                 await this.$store.dispatch('login',{
                 email:this.email,
                 password:this.password})
-                console.log("done")
-                router.push('/')
                 this.$store.commit('reset')
             }catch(err){
-                console.log('er',typeof(err),err.code)
-                this.userError = err.code == 'auth/user-not-found'?
+                const message = err.response.data.non_field_errors[0]
+                console.log('er',typeof(err))
+                this.userError = message == 'user-not-found.'?
                 'ユーザーが存在しません。' : '' 
-                this.passError = err.code == 'auth/wrong-password'?
+                this.passError = message == 'wrong-password.'?
                 'パスワードが違います。' : ''
                 this.manyError = err.code == 'auth/too-many-requests'?
                 '短時間にリクエストを複数受けたため一時的にリクエストを停止します。暫く経ってもう一度お試しください。' :''               
