@@ -8,7 +8,7 @@
         :stageHeight="800"
         :stageWidth="1600"
         :shouldDestroyAfterDone="true"/> -->
-        <div id="google"></div>
+        <!-- <div id="google"></div> -->
         <!-- <GoogleLogin :callback="callback">
     <v-btn style="height:55px;width:210px">
         <img src="/assets/btn_google_signin_light_normal_web@2x.png"  style="height:50px"/>
@@ -23,7 +23,7 @@
             <div v-if="!showCompo" class='home-main-wrapper'>
                 <div class="home-hero">
                     <p class="hero-title">楽しく学ぶ最高峰の日本語ラーニングコミュニティ</p>
-                    <img @click="test" src="@/assets/logo-with-logo.png">
+                    <img @click="googleLogin" src="@/assets/logo-with-logo.png">
                     <div class="hero-paragraph-wrapper">
                         <div class="paragraph-container">
                             <p class="hero-paragraph">自分のレベルに合った問題をクイズ形式で
@@ -139,13 +139,13 @@ export default {
             },
             client:{},
             clientConfig: {
-//         client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
-//         scope: 'https://www.googleapis.com/auth/userinfo.email',
-//         redirect_uri:'http://127.0.0.1:8000/api/user-google/',
-//         ux_mode: 'redirect',
-//         // ux_mode: 'popup',
-//         callback: (response) => {console.log("response",response)
-//   },
+        client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/userinfo.email',
+        redirect_uri:'http://127.0.0.1:8000/api/user-google/',
+        ux_mode: 'redirect',
+        // ux_mode: 'popup',
+        callback: (response) => {console.log("response",response)
+  },
       }
         }
     },

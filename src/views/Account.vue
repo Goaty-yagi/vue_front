@@ -10,7 +10,7 @@
             <!-- <div v-if='$store.state.isLoading==false&&userData&&gotInfo' class="content-wrapper">     -->
                 <h1 class='title-white'>アカウント</h1>
                 <div class="cropper-wrapper">
-                    <img v-bind:src="getImageURL(userData.thumbnail)"/>
+                    <img v-bind:src="getImageURL(user.thumbnail)"/>
                     <p class="change-img" @click='handleShowThumbnail'>画像を<br>変更する</p>
                 </div>
                 <div class="my-quiz-wrapper">
@@ -33,7 +33,7 @@
                             User<br>Name
                         </div>
                         <div class="right-side">
-                            {{ userData.name}}
+                            {{ user.username}}
                         </div>
                     </div>
                     <div class="current-level user-container">
@@ -212,11 +212,11 @@ export default{
     //     console.log(this.widthForCropper)
     //     },
     // },
-    computed: mapGetters(['quizNameId','getDjangouser','getEmailVerified','getPhotoURL', 'quizTakerObject','fixedScroll']),
+    computed: mapGetters(['quizNameId','getUser','getEmailVerified','getPhotoURL', 'quizTakerObject','fixedScroll']),
         
     mounted(){
         this.$store.commit('fixedScrollFalse')
-        console.log('account mounted',this.quizTakerObject,this.fixedScroll)
+        console.log('account mounted',this.quizTakerObject,this.user)
         this.scrollFixedForUnmailverified()
         window.addEventListener('resize', this.getWidth)
         this.currentPageName = ''
@@ -230,30 +230,30 @@ export default{
     },
     methods:{
         ...mapActions(['getQuizNameId']),
-        async getUserData(){
-            this.$store.commit('setIsLoading', true)
-            await axios
-                .get(`/api/user/${this.getDjangouser.UID}`)
-                .then(response => {
-                    this.userData = response.data
-                    this.quizTaker = response.data.quiz_taker[0]})
-                .catch(e => {
-                    let logger = {
-                    message: "in Account/getUserData. couldn't get user ",
-                    path: window.location.pathname,
-                    actualErrorName: e.name,
-                    actualErrorMessage: e.message,
-                }
-                this.$store.commit('setLogger',logger)
-                this.$store.commit("checkDjangoError",e.message)
-                this.$store.commit('setIsLoading', false)
-                router.push({ name: 'ConnectionError' })
-                })
-            this.handleStatusParameter(this.quizTaker.grade)
-            this.$store.commit('setIsLoading', false)
-            console.log('false')
-            this.gotInfo = true
-        },
+        // async getUserData(){
+        //     this.$store.commit('setIsLoading', true)
+        //     await axios
+        //         .get(`/api/user/${this.getDjangouser.UID}`)
+        //         .then(response => {
+        //             this.userData = response.data
+        //             this.quizTaker = response.data.quiz_taker[0]})
+        //         .catch(e => {
+        //             let logger = {
+        //             message: "in Account/getUserData. couldn't get user ",
+        //             path: window.location.pathname,
+        //             actualErrorName: e.name,
+        //             actualErrorMessage: e.message,
+        //         }
+        //         this.$store.commit('setLogger',logger)
+        //         this.$store.commit("checkDjangoError",e.message)
+        //         this.$store.commit('setIsLoading', false)
+        //         router.push({ name: 'ConnectionError' })
+        //         })
+        //     this.handleStatusParameter(this.quizTaker.grade)
+        //     this.$store.commit('setIsLoading', false)
+        //     console.log('false')
+        //     this.gotInfo = true
+        // },
         // async patchImage(){
         //     this.$store.commit('setIsLoading', true)
         //     console.log("GU",this.getUser)
@@ -438,7 +438,7 @@ export default{
                 this.minContainerHeight = 800
                 this.minContainerWidth = 800
             }
-            console.log('width2',this.widthForCropper,document.cookie)
+            console.log('width2')
         },
         scrollFixedForUnmailverified(){
             if(!this.getEmailVerified){

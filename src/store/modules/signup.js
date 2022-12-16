@@ -87,10 +87,11 @@ export default {
         thirdPartyError:'',
         photoURL:'',
         countryData:'',
-        fromLogin:false,
+        googleLogin:false,
         tokenError:false,
         accessToken:'',
-        refreshToken:''     
+        refreshToken:'',
+        loginError:'' 
     },
     getters:{
         getUID(state){
@@ -134,6 +135,9 @@ export default {
         },
         getTokenError(state) {
             return state.tokenError
+        },
+        getLoginError(state) {
+            return state.loginError
         }
     },
     mutations:{
@@ -365,11 +369,14 @@ export default {
             state.accessToken = ''
             state.refreshToken = ''
         },
-        handleFromLogin(state) {
-            state.fromLogin = !state.fromLogin
+        handleGoogleLogin(state) {
+            state.googleLogin = !state.googleLogin
         },
         handleTokenError(state) {
             state.tokenError = !state.tokenError
+        },
+        setLoginError(state,payload) {
+            state.loginError = payload
         }
         // setPayloadForRetryFetch(payload) {
         //     // payload must be array
@@ -385,19 +392,19 @@ export default {
         // }
     },
     actions:{
-        async fromLogin(context,payload ){
+        async googleLogin(context,payload ){
             console.log("in from login", payload)
-            const fromloginConf =
-            from.accounts.oauth2.initTokenClient({
-                client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.fromusercontent.com',
-                scope: 'https://www.fromapis.com/auth/userinfo.email',
+            const googleloginConf =
+            google.accounts.oauth2.initTokenClient({
+                client_id: '510570087121-s5oqfq50nqpmpgcc56jm0g1sid48hvkn.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/userinfo.email',
                 // redirect_uri:'http://127.0.0.1:8000/api/user-from/',
                 // // ux_mode: 'redirect',
                 // ux_mode: 'popup',
-                callback: (response) => {context.dispatch("fromloginCallback", response)},
+                callback: (response) => {context.dispatch("googleloginCallback", response)},
             })
             try{
-                fromloginConf.requestAccessToken()
+                googleloginConf.requestAccessToken()
                 // throw new Error('could not sent validation')
                 // await axios({
                 //     method: 'post',
@@ -416,22 +423,23 @@ export default {
                 console.log("ERROR",e)
             }
         },
-        async fromloginCallback(context, response){
+        async googleloginCallback(context, response){
             
-            const fromAccessToken = response.access_token
+            const googleAccessToken = response.access_token
+            console.log(googleAccessToken)
             await axios({
                 method: 'post',
-                url: '/api/user-from/',
+                url: '/api/user-google/',
                 withCredentials: true,
                 data: {
-                    access_token: fromAccessToken,
+                    access_token: googleAccessToken,
                 },
                 
             })
             .then(async (res) => {
                 context.commit("setTokens", res.data)   
                 console.log("then", res.data)
-                context.commit('handleFromLogin')           
+                context.commit('handleGoogleLogin')           
                 await context.dispatch("getUserData")
                 console.log("dispatch done", context.state.user)
                 if(context.state.tempUser.test) {
@@ -468,9 +476,9 @@ export default {
                             context.commit('emailVerifiedHandler',res.data.is_active)
                             context.commit('setAuthIsReady',true)
                             console.log("login")
-                            if(context.state.fromLogin){
+                            if(context.state.googleLogin){
                                 router.push({ name: 'Account' })
-                                context.commit('handleFromLogin')
+                                context.commit('handleGoogleLogin')
                             }
                         })
                         .catch((e) => {
@@ -511,27 +519,34 @@ export default {
             })
             .then((res) => {
                 const UID = res.data.user.pk
-                context.commit('handleFromLogin')
+                context.commit('handleGoogleLogin')
                 context.commit("setTokens", res.data)                
                 context.dispatch("getUserData", UID)
 
             })
             .catch((e) =>{
-                let logger = {
-                    message: "in store/signup.login. couldn't login user",
-                    path: window.location.pathname,
-                    actualErrorName: e.name,
-                    actualErrorMessage: e.message,
+                console.log("error", e)
+                context.commit('setLoginError',e.response.data)
+                // let logger = {
+                //     message: "in store/signup.login. couldn't login user",
+                //     path: window.location.pathname,
+                //     actualErrorName: e.name,
+                //     actualErrorMessage: e.message,
 
-                }
-                commit('setLogger',logger)
-                commit("checkDjangoError", e.message)
+                // }
+                // context.commit('setLogger',logger)
+                // context.commit("checkDjangoError", e.message)
             })       
             
               
         },
         async logout(context){
             try{
+                await axios({
+                    method: 'post',
+                    url: '/api/auth/logout/',
+                    withCredentials: true,
+                })
                 // await signOut(auth)
                 context.commit('setUser',null)
                 context.commit('resetQuizKeyStorage')
@@ -710,6 +725,40 @@ export default {
                 commit('setLogger',logger)
                 commit("checkDjangoError", e.message)
             })            
+        },
+        async changePassword(context, payload) {
+            await axios.post( '/api/user-password-change/',{
+                withCredentials: true,
+                data: payload,
+                headers: {
+                    "Content-Type":"aplication/json"
+                }
+            })
+            .then(async (res) => {
+                console.log("THEN",res)
+                context.commit("setTokens",res.data.tokens)
+                context.dispatch("getUserData")
+                .then(() => {
+                    router.push({ name: 'Account' })
+                })
+            })
+            .catch((e) => {
+                let logger = {
+                    message: "in store/signup.password_reset. couldn't change password",
+                    path: window.location.pathname,
+                    actualErrorName: e.name,
+                    actualErrorMessage: e.message,
+
+                }
+                console.log('error',e)
+                commit('setLogger',logger)
+                commit("checkDjangoError", e.message)
+                // if("token_not_pass" in e.response.data ) {
+                //     console.log("ERR expired",e.response.data.message)
+                //     context.commit("handleTokenError")
+                // }
+            })
+            // this.$store.commit('setIsLoading', false)
         },
         handleTokenError(context, payload) {
             if(payload.message==="Your token is expired") {
@@ -1171,23 +1220,23 @@ export default {
                 // router.push({ name: 'ConnectionError' })
             }
         },
-        // async passwordReset(context,email){
-        //     console.log('passreset action',email)
-        //     try{
-        //         context.state.actionCodeSettings['url'] = context.state.accountURL
-        //         await sendPasswordResetEmail(auth,email,context.state.actionCodeSettings)
-        //     console.log('password reset sent')
-        // }catch(e){
-        //     let logger = {
-        //         message: "in store/signup.passwordReset. couldn't sent pass reset",
-        //         name: window.location.pathname,
-        //         actualErrorName: e.code,
-        //         actualErrorMessage: e.message,
-        //     }
-        //     context.commit('setLogger',logger)
-        //     router.push({ name: 'ConnectionError' })
-        //     }
-        // },
+        async passwordReset(context,email){
+            console.log('passreset action',email)
+            try{
+                context.state.actionCodeSettings['url'] = context.state.accountURL
+                await sendPasswordResetEmail(auth,email,context.state.actionCodeSettings)
+            console.log('password reset sent')
+        }catch(e){
+            let logger = {
+                message: "in store/signup.passwordReset. couldn't sent pass reset",
+                name: window.location.pathname,
+                actualErrorName: e.code,
+                actualErrorMessage: e.message,
+            }
+            context.commit('setLogger',logger)
+            router.push({ name: 'ConnectionError' })
+            }
+        },
         
         updateQuizTakerAction({state, commit, getters},payload){
             console.log('inUQTA',getters)

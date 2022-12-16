@@ -113,7 +113,7 @@ export default createStore({
     reset(state) {
       console.log('reset')
       Object.assign(state, getDefaultState())
-      router.push('/')
+      // router.push('/')
     },
     getURLs(state,item){
       state.num = item.num

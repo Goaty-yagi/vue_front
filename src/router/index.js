@@ -23,6 +23,7 @@ import TermsAndConditions from '../views/footer-contents/TermsAndConditions.vue'
 import Privacy from '../views/footer-contents/Privacy.vue'
 import Enquire from '../views/footer-contents/Enquire.vue'
 import EmailVerification from '../views/EmailVerification.vue'
+import PasswordReset from '../views/authentications/PasswordReset.vue'
 
 import store from '../store'
 
@@ -137,6 +138,11 @@ const routes = [
     path: '/verification/:token',
     name: 'EmailVerification',
     component: EmailVerification,
+  },
+  {
+    path: '/password-change/:token',
+    name: 'PasswordReset',
+    component: PasswordReset,
   },
   { 
     path: '/notfound',

@@ -225,15 +225,15 @@ export default {
                 this.mailInUseError = this.$store.state.signup.checkedEmail ?
                 '' : '@address is already in use'
                 if (this.$store.state.signup.checkedEmail == true){
-                // this.showSentHandler()
-                this.handleSlide()
-                this.showPasswordTrue()
-                this.showProgressHandler()
-                this.$store.commit('addStep')
-                this.$store.commit('getUsername',this.userData.username)
-                this.$store.commit('getEmail',this.userData.email)
-                this.$store.commit('getEmail2',this.userData.email2)
-                this.$store.commit('getCountry',this.userData.country)
+                    // this.showSentHandler()
+                    this.handleSlide()
+                    this.showPasswordTrue()
+                    this.showProgressHandler()
+                    this.$store.commit('addStep')
+                    this.$store.commit('getUsername',this.userData.username)
+                    this.$store.commit('getEmail',this.userData.email)
+                    this.$store.commit('getEmail2',this.userData.email2)
+                    this.$store.commit('getCountry',this.userData.country)
                 }                
             }
         },

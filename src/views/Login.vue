@@ -15,11 +15,12 @@
                                 <i :class="[passType ? 'fas fa-eye':'fas fa-eye-slash']" id='eye' @click='click' ></i>
                             </div>      
                         </div>
-                        <div class='error-form'  v-if='userError||passError||manyError'>
+                        <div class='error-form'  v-if='userError||passError||manyError||emailError'>
                             <i class="fas fa-exclamation-triangle"></i>
                             <div>{{ userError }}</div>
                             <div>{{ passError }}</div>
                             <div>{{ manyError }}</div>
+                            <div>{{ emailError }}</div>
                         </div>
                         <div class='text-wrapper' v-if='passError'>
                             <p>パスワードをお忘れですか。</p>
@@ -69,6 +70,7 @@ export default {
             showButton:true,
             passError:null,
             userError:null,
+            emailError:null,
             manyError:null,
             showSentPassReset:false,
             showSent:false,
@@ -124,21 +126,33 @@ export default {
             console.log('showsent')
         },
         async submitForm(){      
-            try{
-                await this.$store.dispatch('login',{
-                email:this.email,
-                password:this.password})
-                this.$store.commit('reset')
-            }catch(err){
-                const message = err.response.data.non_field_errors[0]
-                console.log('er',typeof(err))
-                this.userError = message == 'user-not-found.'?
-                'ユーザーが存在しません。' : '' 
-                this.passError = message == 'wrong-password.'?
-                'パスワードが違います。' : ''
-                this.manyError = err.code == 'auth/too-many-requests'?
-                '短時間にリクエストを複数受けたため一時的にリクエストを停止します。暫く経ってもう一度お試しください。' :''               
-            }
+            
+            await this.$store.dispatch('login',{
+            email:this.email,
+            password:this.password
+            })
+            .then(() => {
+                try{
+                    const error = this.$store.getters.getLoginError
+                    const errMessage = Object.values(error)[0][0]
+                    if(errMessage) {
+                        this.userError = errMessage == 'user-not-found.'?
+                        'ユーザーが存在しません。' : ''
+                        this.emailError = errMessage == 'Enter a valid email address.'?
+                        '正しいアドレスを入力してください。' : '' 
+                        this.passError = errMessage == 'wrong-password.'?
+                        'パスワードが違います。' : ''
+                        this.manyError = errMessage == 'auth/too-many-requests'?
+                        '短時間にリクエストを複数受けたため一時的にリクエストを停止します。暫く経ってもう一度お試しください。' :'' 
+                    }
+                } catch(e) {
+                    console.log("something went wrong")
+                }
+
+            })
+            .catch(e => {
+                console.log("ER",e)
+            })                             
         },
         googleLogin(){
             this.$store.dispatch('googleLogin')
@@ -164,6 +178,9 @@ export default {
     align-items: center;
     .id-form{
         margin-top: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
     }
     .login-text{
@@ -279,7 +296,7 @@ export default {
         transition:0.8s;
     }
     .error-form{
-        width: 17rem;
+        width:95%;
         background: $back-tr-white;
     }
     p{
