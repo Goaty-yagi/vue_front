@@ -491,6 +491,8 @@ export default {
                                 }
                                 console.log("self",self.name)
                                 context.dispatch('retryFetch',newPayload)
+                            } else {
+                                return
                             }
                         })
                     }
@@ -705,13 +707,15 @@ export default {
             // this.$store.commit('setIsLoading', false)
         },
         async userCreate(content, payload) {
+            "payload includes username, email. password"
             await axios({
                 method:"post",
                 url: "api/user-create/",
                 data: payload
             })
-            .then(response => {
-                commit('setuser',response.data)
+            .then(res => {
+                console.log("create_user",res)
+                content.commit('setUser',res.data)
             })
             .catch((e) =>{
                 let logger = {
@@ -726,6 +730,36 @@ export default {
                 commit("checkDjangoError", e.message)
             })            
         },
+        async SendChangePassword(context, payload) {
+            await axios.post( '/api/user-send-password-change/',{
+                withCredentials: true,
+                data: payload,
+                headers: {
+                    "Content-Type":"aplication/json"
+                }
+            })
+            .then(async (res) => {
+                console.log("THEN",res)
+
+            })
+            .catch((e) => {
+                let logger = {
+                    message: "in store/signup.password_reset. couldn't change password",
+                    path: window.location.pathname,
+                    actualErrorName: e.name,
+                    actualErrorMessage: e.message,
+
+                }
+                console.log('error',e)
+                commit('setLogger',logger)
+                commit("checkDjangoError", e.message)
+                // if("token_not_pass" in e.response.data ) {
+                //     console.log("ERR expired",e.response.data.message)
+                //     context.commit("handleTokenError")
+                // }
+            })
+            // this.$store.commit('setIsLoading', false)
+        },
         async changePassword(context, payload) {
             await axios.post( '/api/user-password-change/',{
                 withCredentials: true,
@@ -735,12 +769,16 @@ export default {
                 }
             })
             .then(async (res) => {
-                console.log("THEN",res)
-                context.commit("setTokens",res.data.tokens)
-                context.dispatch("getUserData")
-                .then(() => {
-                    router.push({ name: 'Account' })
-                })
+                console.log("THEN",res.data.password_change)
+                if(res.data.password_change) {
+                    context.commit("setTokens",res.data.tokens)
+                    context.dispatch("getUserData")
+                    .then(() => {
+                        router.push({ name: 'Account' })
+                    })   
+                } else {
+                    console.log("not change")
+                }
             })
             .catch((e) => {
                 let logger = {

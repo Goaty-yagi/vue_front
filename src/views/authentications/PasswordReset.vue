@@ -1,6 +1,9 @@
 <template>
-    <div class="password-wrapper">
-        <form class="id-form" @submit.prevent='submitForm' >
+    <div class="password-wrapper" :class="{'laoding-center':$store.state.isLoading}">
+        <form v-if="!$store.state.isLoading" class="id-form" @submit.prevent='submitForm' >
+            <div class="is-loading-bar has-text-centered" v-bind:class="{'is-loading': $store.state.isLoading }">
+                <div class="lds-dual-ring"></div>
+            </div>
             <div class='field-wrapper'>
                 <p class='password-text'>パスワード変更</p>
                 <div class="field">
@@ -22,17 +25,30 @@
                 <div v-if='passwordError2'>{{ passwordError2 }}</div>
             </div>    
             <div>
-                <button class='fbottun' ref='bform'>次へ</button>
+                <button class='fbottun' ref='bform'>送信</button>
             </div>
         </form>
+        <AbstractModal
+        v-if="tokenNotExist"
+        :modalMessage='modalMessage'
+        
+        />
     </div>
 </template>
 
 <script>
+import axios from 'axios'
+import {router} from "@/main.js"
+import AbstractModal from '@/components/parts/AbstractModal.vue'
+
 export default {
+    components:{
+        AbstractModal
+    },
     data(){
         return{
             token:this.$route.params.token,
+            tokenNotExist:'',
             password:'',
             password2:'',
             accept:'',
@@ -41,14 +57,19 @@ export default {
             passwordError2:'',
             passType:true,
             passType2:true,
+            modalMessage:"エラーが発生しました。最新のパスワード変更メールを確認してください。",
+            modalFunctionMessage:"パスワード変更メールをもう一度送りますか。",
+            modalFunction:() => this.$store.dispatch('SendChangePassword',this.email)
         }
     },
     mounted(){
+        this.checkTokenExist()
         this.$emit('handle')
         this.$store.commit('handleOnSigningup')
     },
     beforeUnmount(){
         this.$store.commit('handleOnSigningup')
+        this.tokenNotExist = false
     },
     updated(){
         this.showButtonHandler()
@@ -78,13 +99,12 @@ export default {
             },
         submitForm(){
             // validate password
-            console.log('clicked')
             this.passwordError = this.password == this.password2?
             '' : '@passwords are not the same'
             this.passwordError2 = this.password.length > 7?
             '' : '@password is less than 8 char'
             if (this.passwordError == ''&&this.passwordError2 == ''){
-                this.$store.dispatch("changePassword",{
+                this.changePassword({
                     token: this.token,
                     password: this.password
                 })    
@@ -95,6 +115,75 @@ export default {
         },
         click2(){
             this.passType2 = !this.passType2
+        },
+        async checkTokenExist(){
+            console.log("tokencheck")
+            this.$store.commit('setIsLoading', false)
+            await axios("/api/token-check/",{
+                method: "post",
+                data: {"token":this.token}
+            })
+            .then((res) => {
+                this.$store.commit('setIsLoading', false)
+                console.log("DATA",res.data)
+                if(!res.data.exist) {
+                    this.tokenNotExist= true
+                    console.log("NO_TOKEN_MUTCH", this.tokenNotExist)
+                }
+            })
+            .catch(e => {
+                console.log(e)
+            })
+        },
+        async changePassword(payload) {
+            await axios.post( '/api/user-password-change/',{
+                withCredentials: true,
+                data: payload,
+                headers: {
+                    "Content-Type":"aplication/json"
+                }
+            })
+            .then(async (res) => {
+                console.log("resPass", res)
+                this.modalMessage = "パスワードの変更が完了しました。アカウントページへ移動します。"
+                this.tokenNotExist= true
+                if(res.data.password_change) {
+                    this.$store.commit("setTokens",res.data.tokens)
+                    this.$store.dispatch("getUserData")
+                    .then(() =>{
+                        console.log("GET")
+                         setTimeout(() =>{
+                            console.log("SET")
+                            router.push({ name: 'Account' })
+                        },2000)
+                    })
+                } else {
+                    console.log("not change")
+                    this.modalMessage = "パスワードの変更ができませんでした。もう一度やり直してください。"
+                    this.tokenNotExist= true
+                    router.push({ name: 'Login' })
+                }
+            })
+            .catch((e) => {
+                let logger = {
+                    message: "in store/signup.password_reset. couldn't change password",
+                    path: window.location.pathname,
+                    actualErrorName: e.name,
+                    actualErrorMessage: e.message,
+
+                }
+                console.log('error',e)
+                commit('setLogger',logger)
+                commit("checkDjangoError", e.message)
+            })
+        },
+        handleTokenError(context, payload) {
+            if(payload.message==="Your token is expired") {
+                debugger
+                return true
+            } else {
+                return false
+            }
         },
     }
         
@@ -213,5 +302,8 @@ export default {
     .error-wrapper{
         width: 100%;
         height:5rem;
+    }
+    .error-form{
+        margin-top: 1rem
     }
 </style>

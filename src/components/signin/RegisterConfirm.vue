@@ -71,7 +71,7 @@ export default {
     },
     mounted(){
         this.$store.commit('fixedScrollTrue')
-        this.getCountry()
+        // this.getCountry()
         console.log('mail',this.$store.state.signup.email, 'password',this.$store.state.signup.password)
         console.log('mounted at confiem',this.$store.getters.fixedScroll)
 
@@ -91,64 +91,73 @@ export default {
     },
     methods:{
         async addStep(){
-            await this.$store.dispatch('signup',{
-            email: this.$store.state.signup.email,
-            password: this.$store.state.signup.password
-            })
             this.$emit('confHandle')
             this.$emit('sentHandle')
             this.$store.commit('addStep')
             this.$emit('handle')
-            await this.registerUserAndDjango()
+            await this.registerUser()
         },
-        async registerUserAndDjango(){
-            if(this.$store.getters.getTempUser.test){
-                console.log('YES TEMP')
-                this.userInfo={
-                    UID: this.$store.state.signup.user.uid,
-                    name: this.$store.state.signup.username,
-                    password: this.$store.state.signup.password,
-                    email: this.$store.state.signup.email,
-                    country: this.$store.state.signup.country,
-                    quiz_taker: [
-                        {grade: this.$store.getters.getTempUser.grade},
-                        {level: this.$store.getters.getTempUser.level},
-                        {user_status: this.$store.getters.getTempUser.statusList}
-                    ],
-                    ip_data: [{
-                        city: this.IPInfo.city,
-                        ip: this.IPInfo.ip,
-                        loc: this.IPInfo.loc,
-                        org: this.IPInfo.org,
-                        postal: this.IPInfo.postal,
-                        region: this.IPInfo.region,
-                        timezone: this.IPInfo.timezone,
-                        country: this.IPInfo.country
-                    }]
-                }
-            }else{
-                console.log('NO TEMP')
-                this.userInfo={
-                    // UID: this.$store.state.signup.user.uid,
-                    name: this.$store.state.signup.username,
-                    password: this.$store.state.signup.password,
-                    email: this.$store.state.signup.email,
-                    country: this.$store.state.signup.country,
-                    // ip_data: [{
-                    //     city: this.IPInfo.city,
-                    //     ip: this.IPInfo.ip,
-                    //     loc: this.IPInfo.loc,
-                    //     org: this.IPInfo.org,
-                    //     postal: this.IPInfo.postal,
-                    //     region: this.IPInfo.region,
-                    //     timezone: this.IPInfo.timezone,
-                    //     country: this.IPInfo.country
-                    // }]
-                }
+        async registerUser() {
+
+            this.userInfo={
+                username: this.$store.state.signup.username,
+                password: this.$store.state.signup.password,
+                email: this.$store.state.signup.email
             }
+            // if(this.$store.getters.getTempUser.test){
+            //     console.log('YES TEMP')
+            //     this.userInfo={
+            //         UID: this.$store.state.signup.user.uid,
+            //         name: this.$store.state.signup.username,
+            //         password: this.$store.state.signup.password,
+            //         email: this.$store.state.signup.email,
+            //         country: this.$store.state.signup.country,
+            //         quiz_taker: [
+            //             {grade: this.$store.getters.getTempUser.grade},
+            //             {level: this.$store.getters.getTempUser.level},
+            //             {user_status: this.$store.getters.getTempUser.statusList}
+            //         ],
+            //         ip_data: [{
+            //             city: this.IPInfo.city,
+            //             ip: this.IPInfo.ip,
+            //             loc: this.IPInfo.loc,
+            //             org: this.IPInfo.org,
+            //             postal: this.IPInfo.postal,
+            //             region: this.IPInfo.region,
+            //             timezone: this.IPInfo.timezone,
+            //             country: this.IPInfo.country
+            //         }]
+            //     }
+            // }else{
+            //     console.log('NO TEMP')
+            //     this.userInfo={
+            //         // UID: this.$store.state.signup.user.uid,
+            //         name: this.$store.state.signup.username,
+            //         password: this.$store.state.signup.password,
+            //         email: this.$store.state.signup.email,
+            //         country: this.$store.state.signup.country,
+            //         // ip_data: [{
+            //         //     city: this.IPInfo.city,
+            //         //     ip: this.IPInfo.ip,
+            //         //     loc: this.IPInfo.loc,
+            //         //     org: this.IPInfo.org,
+            //         //     postal: this.IPInfo.postal,
+            //         //     region: this.IPInfo.region,
+            //         //     timezone: this.IPInfo.timezone,
+            //         //     country: this.IPInfo.country
+            //         // }]
+            //     }
+            // }
             try{
                 console.log("try",this.userInfo)
-                this.$store.dispatch('signupDjangoUser',this.userInfo)
+                this.$store.dispatch('userCreate',this.userInfo)
+                .then(() => {
+                    if(this.$store.getters.getTempUser.test) {
+                        console.log("temp",this.$store.getters.getTempUser)
+                    } else {
+                        console.log("not temp")
+                    }
+                })
                 // await axios({
                 //     method: 'post',
                 //     url: '/api/user/',
@@ -184,39 +193,39 @@ export default {
             this.$emit('handle')
             this.$emit('edithandle')
         },
-        async getCountry(){
-            if(!this.gotIP){
-                await axios
-                .get("https://ipinfo.io/json?token=32e16159d962c5")
-                // .then(response => {
-                //     this.IPInfo = response.data
-                //     console.log(this.IPInfo)
-                //     })
-                .then(response => {
-                    let IP = response.data
-                    this.IPInfo.city = IP.city
-                    this.IPInfo.ip = IP.ip
-                    this.IPInfo.loc = IP.loc
-                    this.IPInfo.org = IP.org
-                    this.IPInfo.postal = IP.postal
-                    this.IPInfo.region = IP.region
-                    this.IPInfo.timezone = IP.timezone
-                    this.IPInfo.country = IP.country
-                    console.log(this.IPInfo)
-                    })
-                .catch((e) => {
-                    let logger = {
-                        message: "in component/signin/register.getCountry. couldn't get country",
-                        name: window.location.pathname,
-                        actualErrorName: e.code,
-                        actualErrorMessage: e.message,
-                    }
-                    context.commit('setLogger',logger)
-                    router.push({ name: 'ConnectionError' })
-                });
-                this.gotIP = true
-            }
-        }    
+        // async getCountry(){
+        //     if(!this.gotIP){
+        //         await axios
+        //         .get("https://ipinfo.io/json?token=32e16159d962c5")
+        //         // .then(response => {
+        //         //     this.IPInfo = response.data
+        //         //     console.log(this.IPInfo)
+        //         //     })
+        //         .then(response => {
+        //             let IP = response.data
+        //             this.IPInfo.city = IP.city
+        //             this.IPInfo.ip = IP.ip
+        //             this.IPInfo.loc = IP.loc
+        //             this.IPInfo.org = IP.org
+        //             this.IPInfo.postal = IP.postal
+        //             this.IPInfo.region = IP.region
+        //             this.IPInfo.timezone = IP.timezone
+        //             this.IPInfo.country = IP.country
+        //             console.log(this.IPInfo)
+        //             })
+        //         .catch((e) => {
+        //             let logger = {
+        //                 message: "in component/signin/register.getCountry. couldn't get country",
+        //                 name: window.location.pathname,
+        //                 actualErrorName: e.code,
+        //                 actualErrorMessage: e.message,
+        //             }
+        //             context.commit('setLogger',logger)
+        //             router.push({ name: 'ConnectionError' })
+        //         });
+        //         this.gotIP = true
+        //     }
+        // }    
     },
 }
 </script>

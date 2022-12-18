@@ -1,7 +1,9 @@
 <template>
-    <div>
-        <div class="login-wrapper">
-            <div class="flex-wrapper">
+        <div class="login-wrapper" :class="{'scroll-fixed':fixedScroll,'laoding-center':$store.state.isLoading}">
+            <div class="is-loading-bar has-text-centered" v-bind:class="{'is-loading': $store.state.isLoading }">
+                <div class="lds-dual-ring"></div>
+            </div>
+            <div v-if="!$store.state.isLoading" class="flex-wrapper">
                 <p class='title-white'>ログイン</p>
                 <form class="id-form" @submit.prevent='submitForm' >
                         <div class="field">
@@ -39,9 +41,12 @@
                         </a>
                 </form>
             </div>
-        </div>
         <div>
-        <SentPassReset v-if='showSentPassReset'/>
+        <AbstractModal
+        v-if="showSentPassReset"
+        :modalMessage='modalMessage'
+        />
+        <!-- <SentPassReset v-if='showSentPassReset'/> -->
         <!-- <NotVerified v-if='showNotVerified'
         @handleShowSent = 'handleShowSent'
          />
@@ -55,10 +60,13 @@ import {router} from "../main.js"
 import SentPassReset from '@/components/login/SentPassReset.vue'
 import NotVerified from '@/components/login/NotVerified.vue'
 import Sent from '@/components/signin/Sent.vue'
+import AbstractModal from '@/components/parts/AbstractModal.vue'
+
 
 export default {
     components:{
         SentPassReset,
+        AbstractModal,
         Sent,
         NotVerified
     },
@@ -75,11 +83,17 @@ export default {
             showSentPassReset:false,
             showSent:false,
             showNotVerified:false,
-            store: this.$store.state.signup
+            store: this.$store.state.signup,
+            fixedScroll: this.$store.getters.fixedScroll.rout,
+            modalMessage:'パスワード再登録メールを送信しました。登録したアドレスで確認してください。'
         }
     },
     mounted(){
         this.scrollTop()
+    },
+    beforeUnmiunt() {
+        this.$store.commit('fixedScrollFalse')
+        this.$store.commit('showModalFalse')
     },
     updated(){
         console.log('login check ',this.store.user)
@@ -111,14 +125,20 @@ export default {
             this.$router.push({name:'Signup'})
         },
         handleShowSentPassReset(){
+            this.$store.commit('fixedScrollTrue')
+            this.$store.commit('showModalTrue')
             this.showSentPassReset = true
         },
         handleShowNotVerified(){
             this.showNotVerified = true
         },
         async resetPass(){
-            await this.$store.dispatch('passwordReset',this.email)
-            this.handleShowSentPassReset()
+            this.$store.commit('setIsLoading', true)
+            await this.$store.dispatch('SendChangePassword',this.email)
+            .then(() => {
+                this.$store.commit('setIsLoading', false)
+                this.handleShowSentPassReset()
+            })
 
         },
         handleShowSent(){
