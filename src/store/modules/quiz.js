@@ -141,6 +141,7 @@ export default {
         },
         setQuestionTypeId(state, payload){
             state.questionTypeId = payload
+            console.log("setQTID",state.questionTypeId)
         },
         getUserStatusInfo(state, payload){
             state.userStatusDict.status = payload.status
@@ -335,8 +336,9 @@ export default {
             }else{
                 // first questions in init
                 commit('setIsLoading', true, {root:true})
+                const superEasyGradeId = '1' //this depend on when the grade created. if first, should be 1
                 let response = await axios
-                .get(`/api/quizzes-tests/?quiz=4&level=${state.level}`)
+                .get(`/api/quizzes-tests/?quiz=${superEasyGradeId}&level=${state.level}`)
                 .catch((e) => {
                     let logger = {
                         message: "in store/quiz.getTestQuestions-second. couldn't get TestQuestions",
@@ -344,7 +346,7 @@ export default {
                         actualErrorName: e.code,
                         actualErrorMessage: e.message,
                     }
-                    context.commit('setLogger',logger)
+                    commit('setLogger',logger)
                     router.push({ name: 'ConnectionError' })
                 });
                 commit('getQuiz',response.data[0])

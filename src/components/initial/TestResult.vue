@@ -1,14 +1,16 @@
 <template>
     <div class='testresult-wrapper'>
-        <ConfettiExplosion
-        v-if="init||showConfetti()"
-        :particleCount="160"
-        :particleSize="12"
-        :duration="3500"
-        :force="0.9"
-        :stageHeight="1200"
-        :stageWidth="1600"
-        :shouldDestroyAfterDone="true"/>
+        <div class="confetti-container">
+            <!-- v-if="init||showConfetti()" -->
+            <ConfettiExplosion
+            :particleCount="160"
+            :particleSize="12"
+            :duration="3500"
+            :force="0.9"
+            :stageHeight="1200"
+            :stageWidth="1600"
+            :shouldDestroyAfterDone="true"/>
+        </div>
         <div v-if="showResultNotification" class="progress-container">
             <p class="progress-text"> {{ gradeForConvert }} Lv, {{ startGradeAndLevel.level }} => 
                 {{ finalResult.grade }} Lv, {{ finalResult.level }}
@@ -148,6 +150,16 @@ export default {
 
 .testresult-wrapper{
     position: relative;
+    .confetti-container{
+        // display: flex;
+        // width: 100%;
+        // justify-content: center;
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index:2
+    }
     .progress-container{
         position: absolute;
         display: flex;

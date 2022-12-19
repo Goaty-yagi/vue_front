@@ -60,6 +60,7 @@ export default{
   mounted(){
     this.initialization()
     console.log('mounted-app')
+    console.log("temp",this.$store.getters.getTempUser)
   },
   methods:{
     async initialization() {

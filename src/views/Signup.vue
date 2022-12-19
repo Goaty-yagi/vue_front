@@ -42,16 +42,15 @@
                             <i class="far fa-envelope" id='in-font'><input required class="text-box" type='email' v-model='userData.email2' id='Confirm' placeholder="Confirm"></i>
                         </div>         
                     </div>
-                    <div class="field">
+                    <!-- <div class="field">
                         <div @click="showSelectionTrue()" class="input-box">
                             <input required class="text-box select-dammy-box" type='text' :focus='false' v-model='viewableCountry' placeholder="Country">
                             <i class="fas fa-globe" id='in-font'>                            
                             </i>
-                            <!-- <p v-if='!country' id='infont-text'>Country</p> -->
                             <p v-if='viewableCountry' id='infont-text'>{{ viewableCountry }}</p>
                             <p v-if='!userData.country' class='down'>⌵</p>
                         </div>         
-                    </div>
+                    </div> -->
                     <div v-if='mailError||nameError||mailInUseError' class='error-form'>
                         <i class="fas fa-exclamation-triangle"></i>
                         <div v-if='mailError'>{{ mailError}}</div>
@@ -255,8 +254,7 @@ export default {
         showButtonHandler(){
             if(this.userData.username!=''&&
                 this.userData.mail!=''&&
-                this.userData.email2!=''&&
-                this.viewableCountry!=''){
+                this.userData.email2!=''){
                     this.showButton = false
             }
             else{
@@ -279,11 +277,11 @@ export default {
                     this.userData.email2 = this.$store.signup.state.email2
                 }
             }
-            if(item == 'Country'){
-                if(this.$store.signup.state.country !=''){
-                    this.userData.country = this.$store.signup.state.country
-                }
-            }
+            // if(item == 'Country'){
+            //     if(this.$store.signup.state.country !=''){
+            //         this.userData.country = this.$store.signup.state.country
+            //     }
+            // }
         },
         showPasswordTrue(){
             this.showPassword = true

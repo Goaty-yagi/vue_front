@@ -16,7 +16,7 @@
                             <div class="question-header"><i class='q'>Q</i>第{{ questionLengthForHTML }}問</div>
                             <div class='question-body'>{{ getQuestionStatus(question.label,question.status[0]) }}{{ question.quiz_level }}</div>
                         </div>
-                        
+                       
                         <!-- <div :class='showPic(question.image)'> -->
                         <div class="image-container" v-if="question.image">
                             <img class="image" v-bind:src="question.get_image"/>
@@ -266,6 +266,8 @@ export default {
             // return selectedAnswer for questionType 3.
             // for questionType 4, use getAnswerIDAndOrder function.
             // for questionType 5, use getIDAndIsCorrect function.
+
+            console.log("clicked", question.question_type)
             if(question.question_type == 3){
                 if(this.selectedIndexNum==answerindex){
                     this.selectedIndexNum = null

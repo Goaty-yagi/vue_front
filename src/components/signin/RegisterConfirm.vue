@@ -1,6 +1,9 @@
 <template>
-    <div class='notification-wrapper'>
-        <div class='notice-wrapper'>
+    <div class='notification-wrapper' :class="{'scroll-fixed':fixedScroll, 'laoding-center':$store.state.isLoading}">
+        <div class="is-loading-bar has-text-centered" v-bind:class="{'is-loading': $store.state.isLoading }">   
+            <div class="lds-dual-ring"></div>
+        </div>
+        <div v-if="!$store.state.isLoading" class='notice-wrapper'>
             <img class='image' src="@/assets/logo.png">
             <p class='text1'>以下の情報で登録しますか。</p>
             <div class="field">
@@ -15,21 +18,21 @@
                         <div class="text-box" id='mail'>{{ $store.state.signup.email }}</div>
                 </div>         
             </div>
-            <div class="field">
+            <!-- <div class="field">
                 <div class="input-box">
                     <div><i class="fas fa-globe" id='in-font'></i></div>
                     <div class="text-box">{{ viewableCountry }}</div>
                 </div>         
-            </div>
+            </div> -->
             <div class="field">
                 <div class="input-box">
                     <i class="fas fa-unlock-alt" id='in-font'></i>
-                    <div class="text-box">{{ $store.state.signup.password }}</div>
+                    <div class="text-box">{{ secretPassword }}</div>
                 </div>         
             </div>
             <div class="buttons">
                 <button  @click='goEdit' class='button' :disabled='error' id='color-button'><p>編集する</p></button>
-                <button  @click='addStep' class='button' :disabled='error' id='color-button'><p>登録</p></button>
+                <button  @click='registerUser' class='button' :disabled='error' id='color-button'><p>登録</p></button>
             </div>
             <transition name="notice">
                 <div v-if='error' class="error">
@@ -51,11 +54,13 @@ export default {
     ],
     data(){
         return{
+            user: this.$store.getters.getUser,
             error: null,
             errorMessage:'このメールアドレスはすでに使われています。',
             errorMessage2:'登録できませんでした。もう一度お試しください。',
             userInfo:'',
             gotIP:false,
+            secretPassword: "********",
             IPInfo:[
                 {city:"",
                 ip:"",
@@ -73,30 +78,32 @@ export default {
         this.$store.commit('fixedScrollTrue')
         // this.getCountry()
         console.log('mail',this.$store.state.signup.email, 'password',this.$store.state.signup.password)
-        console.log('mounted at confiem',this.$store.getters.fixedScroll)
+        console.log('mounted at confiem',this.user)
 
     },
     beforeUnmount(){
         this.$store.commit('fixedScrollFalse')
     },
-    computed:{
-        user(){
-            try{
-                return this.$store.state.signup.djangoUser
-            }
-            catch{
-                return null
-            }
-        },
-    },
+    // computed:{
+    //     user(){
+    //         try{
+    //             return this.$store.state.signup.djangoUser
+    //         }
+    //         catch{
+    //             return null
+    //         }
+    //     },
+    // },
     methods:{
-        async addStep(){
-            this.$emit('confHandle')
-            this.$emit('sentHandle')
-            this.$store.commit('addStep')
-            this.$emit('handle')
-            await this.registerUser()
-        },
+        // async addStep(){
+        //     await this.registerUser()
+        //     .then(() => {
+        //         this.$emit('confHandle')
+        //         this.$emit('sentHandle')
+        //         this.$store.commit('addStep')
+        //         this.$emit('handle')
+        //     })
+        // },
         async registerUser() {
 
             this.userInfo={
@@ -150,10 +157,25 @@ export default {
             // }
             try{
                 console.log("try",this.userInfo)
+                this.$store.commit('setIsLoading', true)
                 this.$store.dispatch('userCreate',this.userInfo)
                 .then(() => {
+                    console.log("then",this.quizTakerId)
+                    this.$store.commit('setIsLoading', false)
+                    this.$emit('confHandle')
+                    this.$emit('sentHandle')
+                    this.$store.commit('addStep')
+                    this.$emit('handle')
                     if(this.$store.getters.getTempUser.test) {
-                        console.log("temp",this.$store.getters.getTempUser)
+                        const quizTaker = {
+                            quiz_taker_id: this.$store.getters.getQuizTakerId,
+                            quiz_taker: {
+                                grade: this.$store.getters.getTempUser.grade,
+                                level:this.$store.getters.getTempUser.level,
+                                statusList:this.$store.getters.getTempUser.statusList
+                            }
+                        }
+                        this.$store.dispatch('quizTakerUpdateForInitialization', quizTaker)
                     } else {
                         console.log("not temp")
                     }

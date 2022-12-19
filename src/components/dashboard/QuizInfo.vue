@@ -164,6 +164,7 @@ export default {
                 this.$store.commit('setIsLoading', false)
                 router.push({ name: 'ConnectionError' })
             })
+            console.log("GNOQ", response)
             this.numOfQuestions = response.data[0]
             console.log('data',this.numOfQuestions)
             this.setBarChartData()
@@ -181,6 +182,7 @@ export default {
                 tempList.push(i[title].sum)
                 this.barChartData.datasets[0].data = tempList
             }
+            console.log("NOQ",this.numOfQuestions)
             this.sumOfAllQuestions = this.numOfQuestions.get_num_of_question[this.numOfQuestions.get_num_of_question.length-1].all_questions_num
         },
         barChartDetail(index) {

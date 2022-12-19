@@ -182,8 +182,7 @@ function initialData() {
             label:'',
             is_correct:false,
             answer_id:4,
-        },
-        ],
+        },],
         formAnswerData:{
             label:'',
             is_correct:false,
@@ -205,6 +204,7 @@ function initialData() {
         handleAnswerLength: 4,
         formDataReady: false,
         image: '',
+        initialized: false
     }
 }
 
@@ -218,6 +218,7 @@ export default {
         
     },
     created(){
+        this.$store.dispatch('getQuizNameId')
         this.$store.dispatch('getQuestionTypeId')
         this.$store.dispatch('getFieldNameId')
     },
@@ -225,19 +226,24 @@ export default {
         // this.$store.dispatch('getQuestionTypeId')
     },
     mounted(){
+        
         console.log('mounted at create-question',this.quizNameId,this.fieldNameId)
     },
     watch:{
         answerNum:function(v) {
             console.log('v',v)
-            if (this.handleAnswerLength > v){
+            if(this.initialized) {
+                if (this.handleAnswerLength > v){
                 this.handleAnswerLength = v
                 this.formAnswerDataList.pop()   
             } else {
+
+                console.log("push")
                 const _ = require('lodash');
                 let copyObject = _.cloneDeep(this.formAnswerData)
                 this.formAnswerDataList.push(copyObject)
                 this.handleAnswerLength = v
+            }
             }
         },
         tempQuiz:function(v) {
@@ -279,9 +285,11 @@ export default {
             console.log(this.showSideBar)
         },
         addAnswer(){
+            this.initialized = true
             this.answerNum += 1
         },
         subtractAnswer(){
+            this.initialized = true
             if(this.answerNum > 1){
                 this.answerNum -= 1
             }
@@ -412,6 +420,7 @@ export default {
             this.errorOccurred = false
         },
         convertQuizGradeToId(grade) {
+            console.log("CQ",this.quizNameId,grade)
             for (let i of this.quizNameId){
                 if (i.name == grade){
                     return i.id
@@ -458,7 +467,10 @@ export default {
             this.$store.commit('fixedScrollFalse')
         },
         allResetVars() {
+            console.log("before_reset",this.formAnswerDataList)
             Object.assign(this.$data, initialData())
+            console.log("after_reset",this.formAnswerDataList)
+            console.log("handle_answer",this.answerNum)
         },
         setQuestionDetailInfo() {
             console.log('info')

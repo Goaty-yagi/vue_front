@@ -40,10 +40,7 @@ export default createStore({
     createPersistedState({
       key: 'quizkey',  // 設定しなければ'vuex'
       paths: [
-        "signup.djangoUser",
         "signup.emailVerified",
-        "signup.apiError",
-        "signup.UID",
         "signup.registeredUser",
         "signup.myQuestion",
         "signup.myQuizInfo",

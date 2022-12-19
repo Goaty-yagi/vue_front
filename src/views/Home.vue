@@ -160,7 +160,7 @@ export default {
             }
         }).find(v => v != undefined)
         this.scrollTop()
-        this.setInitUserStatus()
+        // this.setInitUserStatus()
         // console.log('mounted',this.$store.state.signup.djangoUser)
         // Cookies.set('unko','chinko')
         // this.$store.dispatch("getAnsweredQuestion")

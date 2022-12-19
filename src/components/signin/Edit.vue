@@ -30,7 +30,7 @@
                         <i class="far fa-envelope" id='in-font'><input required class="text-box" v-model='email' type='email'  id='E-mail' placeholder="E-mail"></i>
                     </div>         
                 </div>
-                <div class="field">
+                <!-- <div class="field">
                         <div @click="showSelectionTrue()" class="input-box">
                             <input required class="text-box select-dammy-box" type='text' v-model='viewCountry' :placeholder="country">
                             <i class="fas fa-globe" id='in-font'>                            
@@ -39,7 +39,7 @@
                             <p v-if='!viewCountry' class='down'>⌵</p>
                         </div>         
                     </div>
-                    
+                     -->
                 <div class="field">
                     <div class="input-box">
                         <i class="fas fa-unlock-alt" id='in-font'><input required v-model='password' class="text-box" autocomplete :type="inputType"></i>

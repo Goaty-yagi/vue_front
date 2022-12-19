@@ -8,7 +8,7 @@
         <div class="shape-container" id='second' ref='text2'>
             <div class="parallel-quadrangle" ref='step2'></div>
             <p v-if='$store.state.step!=2'>2</p>
-            <p class='ips-text' v-if='$store.state.step==2'>パスワード<wbr>入力</p>
+            <p class='ips-text' v-if='$store.state.step==2'>パスワード</p>
         </div>
         <div class="shape-container" id='three' ref='text3'>
             <div class="parallel-quadrangle" ref='step3'></div>
@@ -103,7 +103,7 @@ export default {
     .shape-container.text#second p{
         // white-space:initial;
         font-size:0.8rem;
-        top:55%;
+        top:75%;
         line-height:1rem
     }
     .shape-container.text#three p{

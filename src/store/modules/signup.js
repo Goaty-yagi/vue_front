@@ -91,7 +91,8 @@ export default {
         tokenError:false,
         accessToken:'',
         refreshToken:'',
-        loginError:'' 
+        loginError:'',
+        quizTakerId:''
     },
     getters:{
         getUID(state){
@@ -100,9 +101,9 @@ export default {
         getUser(state){
             return state.user
         },
-        // getuser(state){
-        //     return state.user
-        // },
+        getQuizTakerId(state){
+            return state.quizTakerId
+        },
         getEmailVerified(state){
             return state.emailVerified
         },
@@ -163,6 +164,10 @@ export default {
                 state.UID = state.user.UID
             }
             console.log('user state changed:',state.user)
+        },
+        setQuizTakerId(state, payload) {
+            state.quizTakerId = payload
+            console.log("setQTI", state.quizTakerId)
         },
         setAuthIsReady(state,payload){
             state.authIsReady = payload
@@ -437,17 +442,21 @@ export default {
                 
             })
             .then(async (res) => {
+                console.log('res', res)
                 context.commit("setTokens", res.data)   
-                console.log("then", res.data)
                 context.commit('handleGoogleLogin')           
                 await context.dispatch("getUserData")
-                console.log("dispatch done", context.state.user)
+                console.log("dispatch done", context.state.user.quiz_taker[0].id)
                 if(context.state.tempUser.test) {
-                    const quizTakerOb = {
-                        grade: context.state.tempUser.grade,
-                        level: context.state.tempUser.level,
+                    const quizTaker = {
+                        quiz_taker_id: context.state.user.quiz_taker[0].id,
+                        quiz_taker: {
+                            grade: context.state.tempUser.grade,
+                            level: context.state.tempUser.level,
+                            statusList: context.state.tempUser.statusList
+                        }
                     }
-                    context.dispatch('updateQuizTaker', quizTakerOb, { root:true })
+                    context.dispatch('quizTakerUpdateForInitialization', quizTaker)
                 }
             })
             .catch((e) => {
@@ -706,29 +715,54 @@ export default {
             })
             // this.$store.commit('setIsLoading', false)
         },
-        async userCreate(content, payload) {
+        async userCreate(context, payload) {
             "payload includes username, email. password"
+            // context.commit('setIsLoading', true, {root:true})
             await axios({
                 method:"post",
                 url: "api/user-create/",
                 data: payload
             })
             .then(res => {
-                console.log("create_user",res)
-                content.commit('setUser',res.data)
+                // context.commit('setIsLoading', false, {root:true})
+                console.log("create_user",res.data.quiz_taker_id)
+                context.commit('setQuizTakerId',res.data.quiz_taker_id)
             })
             .catch((e) =>{
+                context.commit('setIsLoading', false, {root:true})
                 let logger = {
-                    message: "in store/signup.userCreate. couldn't create django user",
+                    message: "in store/signup.userCreate. couldn't create user",
                     path: window.location.pathname,
                     actualErrorName: e.name,
                     actualErrorMessage: e.message,
 
                 }
                 console.log('error',e)
-                commit('setLogger',logger)
-                commit("checkDjangoError", e.message)
+                context.commit('setLogger',logger)
+                context.commit("checkDjangoError", e.message)
             })            
+        },
+        async quizTakerUpdateForInitialization(context, payload){
+            
+            console.log("quiz_taker_update", payload)
+            await axios({
+                method: 'post',
+                url: '/api/quiz-taker-update/',
+                withCredentials: true,
+                data: {
+                    quiz_taker_id: payload.quiz_taker_id,
+                    quiz_taker: payload.quiz_taker
+
+                },
+                
+            })
+            .then((res) => {
+                context.commit('setTempUserReset')
+                console.log("respone",res)
+            })
+            .catch((e) => {
+                console.log("EROOR", e)
+            })
         },
         async SendChangePassword(context, payload) {
             await axios.post( '/api/user-send-password-change/',{
@@ -760,44 +794,44 @@ export default {
             })
             // this.$store.commit('setIsLoading', false)
         },
-        async changePassword(context, payload) {
-            await axios.post( '/api/user-password-change/',{
-                withCredentials: true,
-                data: payload,
-                headers: {
-                    "Content-Type":"aplication/json"
-                }
-            })
-            .then(async (res) => {
-                console.log("THEN",res.data.password_change)
-                if(res.data.password_change) {
-                    context.commit("setTokens",res.data.tokens)
-                    context.dispatch("getUserData")
-                    .then(() => {
-                        router.push({ name: 'Account' })
-                    })   
-                } else {
-                    console.log("not change")
-                }
-            })
-            .catch((e) => {
-                let logger = {
-                    message: "in store/signup.password_reset. couldn't change password",
-                    path: window.location.pathname,
-                    actualErrorName: e.name,
-                    actualErrorMessage: e.message,
+        // async changePassword(context, payload) {
+        //     await axios.post( '/api/user-password-change/',{
+        //         withCredentials: true,
+        //         data: payload,
+        //         headers: {
+        //             "Content-Type":"aplication/json"
+        //         }
+        //     })
+        //     .then(async (res) => {
+        //         console.log("THEN",res.data.password_change)
+        //         if(res.data.password_change) {
+        //             context.commit("setTokens",res.data.tokens)
+        //             context.dispatch("getUserData")
+        //             .then(() => {
+        //                 router.push({ name: 'Account' })
+        //             })   
+        //         } else {
+        //             console.log("not change")
+        //         }
+        //     })
+        //     .catch((e) => {
+        //         let logger = {
+        //             message: "in store/signup.password_reset. couldn't change password",
+        //             path: window.location.pathname,
+        //             actualErrorName: e.name,
+        //             actualErrorMessage: e.message,
 
-                }
-                console.log('error',e)
-                commit('setLogger',logger)
-                commit("checkDjangoError", e.message)
-                // if("token_not_pass" in e.response.data ) {
-                //     console.log("ERR expired",e.response.data.message)
-                //     context.commit("handleTokenError")
-                // }
-            })
-            // this.$store.commit('setIsLoading', false)
-        },
+        //         }
+        //         console.log('error',e)
+        //         commit('setLogger',logger)
+        //         commit("checkDjangoError", e.message)
+        //         // if("token_not_pass" in e.response.data ) {
+        //         //     console.log("ERR expired",e.response.data.message)
+        //         //     context.commit("handleTokenError")
+        //         // }
+        //     })
+        //     // this.$store.commit('setIsLoading', false)
+        // },
         handleTokenError(context, payload) {
             if(payload.message==="Your token is expired") {
                 debugger
