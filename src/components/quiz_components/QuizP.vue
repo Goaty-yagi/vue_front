@@ -208,7 +208,7 @@ export default {
         this.getquestions()
     },
     mounted(){
-        console.log("mounted QuizP",this.getMyQuestion)
+        console.log("mounted QuizP",this.getMyQuestion, this.getUser)
         this.getMyQuestionIds(this.getMyQuestion)
         this.questionLength = this.questions.length
         this.startQuiz = true
@@ -229,7 +229,7 @@ export default {
         //         a.setAttribute('style',`width:${percentage}%`)}
         // }
     },
-    computed: mapGetters(['questions','quiz','getMyQuestion','getMyQuizInfo']),
+    computed: mapGetters(['questions','quiz','getMyQuestion','getMyQuizInfo', "getUser"]),
         // myQuestion(){
         //     return this.$store.state.signup.myQuestion
         // },
@@ -559,7 +559,7 @@ export default {
         },
         async updateQuizTaker(){
             await axios
-            .patch(`api/quiz-taker-practice/?quiz_taker=${this.$store.state.signup.djangoUser.quiz_taker[0].id}`)
+            .patch(`api/quiz-taker-practice/?quiz_taker=${this.getUser.quiz_taker[0].id}`)
             .catch(e => {
                     let logger = {
                         message: "in components/quiz_components/QuizP/updateQuizTaker. couldn't update QuizTaker",

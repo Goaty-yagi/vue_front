@@ -29,7 +29,7 @@
                             <img class='img' v-bind:src="question.user.thumbnail"/>
                         </div>
                         <div class="username-date">
-                            <p> {{ question.user.name}}さん </p>
+                            <p> {{ question.user.username}}さん </p>
                             <p> {{ dateConvert(question.created_on) }} </p>
                         </div>
                         <div class="question-status-container">
@@ -119,8 +119,8 @@
                             <i v-if="answerDict[answer.id].addedAnswerLiked" class="fas fa-heart"></i>
                             <p class="good"> {{ answerDict[answer.id].liked_num }} </p>
                         </div>
-                        <div v-if="loginUser">
-                            <button v-if="question.user.UID == $store.state.signup.user.uid && answer.reply.length == 0"
+                        <div v-if="user">
+                            <button v-if="question.user.UID == $store.state.signup.user.UID && answer.reply.length == 0"
                             class='btn-base-white-db-sq' 
                             @click='handleReplyPage(answer.id, answer.description)'>
                             返信する
@@ -140,8 +140,8 @@
                                     </div>
                                 </div>
                                 <p class="replay-description">{{ reply.description }}</p>
-                                <div v-if="loginUser">
-                                    <button v-if='$store.state.signup.user.uid==question.user.UID && answer.reply.slice(-1)[0].id==reply.id && answer.reply.slice(-1)[0].user.UID!=question.user.UID || $store.state.signup.user.uid==answer.user.UID && answer.reply.slice(-1)[0].id==reply.id && answer.reply.slice(-1)[0].user.UID==question.user.UID'
+                                <div v-if="user">
+                                    <button v-if='$store.state.signup.user.UID==question.user.UID && answer.reply.slice(-1)[0].id==reply.id && answer.reply.slice(-1)[0].user.UID!=question.user.UID || $store.state.signup.user.UID==answer.user.UID && answer.reply.slice(-1)[0].id==reply.id && answer.reply.slice(-1)[0].user.UID==question.user.UID'
                                     class='btn-base-white-db-sq' 
                                     @click='handleReplyPage(answer.id, reply.description)'>
                                     返信する
@@ -239,22 +239,22 @@ export default {
     },
     beforeUnmount(){
         console.log('beforeUNMOUNT')
-        this.$store.dispatch('getDjangoUser')
+        this.$store.dispatch('getUserData')
     },
     computed:{
         user(){
-            return this.$store.state.signup.djangoUser
+            return this.$store.state.signup.user
         },
         UID(){
             try{
-                return this.$store.state.signup.djangoUser.UID
+                return this.$store.state.signup.user.UID
             }catch{
                 return ''
             }
         },
-        loginUser(){
-            return this.$store.state.signup.user
-        },
+        // loginUser(){
+        //     return this.$store.state.signup.user
+        // },
         emailVerified(){
             return this.$store.getters.getEmailVerified
         },
@@ -360,7 +360,7 @@ export default {
                         this.$store.commit('setIsLoading', false)
                         router.push({ name: 'ConnectionError' })
                     })
-                    this.$store.dispatch('getDjangoUser')
+                    this.$store.dispatch('getUserData')
                     this.$store.dispatch('getAnsweredQuestion')
                 }
             }
@@ -420,7 +420,7 @@ export default {
                 method: 'post',
                 url: '/api/board/favorite-question-create/',
                 data: {
-                    user: this.$store.state.signup.user.uid,
+                    user: this.user.UID,
                     question: [this.question.id]
                 },
             })
@@ -445,13 +445,13 @@ export default {
             }
         },
         async countViewedNumUp(){
-            if(this.loginUser){
+            if(this.user){
                 for (let i =0; i < this.question.tag.length; i++){
                     await axios({
                     method: 'post',
                     url: '/api/board/user-tag/create/',
                     data: {
-                        user: this.$store.state.signup.user.uid,
+                        user: this.user.UID,
                         tag: this.question.tag[i].id
                         },  
                     })
@@ -542,7 +542,7 @@ export default {
             console.log(this.slicedRelatedQuestion)
         },
         deleteSameQuestion(){
-            if(this.loginUser){
+            if(this.user){
                 for(let q of this.relatedQuestion.results){
                     if (q.id == this.question.id){
                         this.relatedQuestion.results.splice(this.relatedQuestion.results.indexOf(q),1)
@@ -578,7 +578,7 @@ export default {
                 for(let i=0; i<this.likedUserIdList.length; i++){
                     this.checkedLikedUserList.push(this.likedUserIdList[i].UID)
                 }
-                this.checkedLikedUserList.push(this.$store.state.signup.user.uid)
+                this.checkedLikedUserList.push(this.$store.state.signup.user.UID)
                 this.countUpLiked()
             }else{
                 this.handleShowNotLogin()
@@ -592,10 +592,10 @@ export default {
         },
         checkUserLiked(){
             // this is for question like
-            if(this.loginUser){
+            if(this.user){
                 this.clearAllLiked()
                 for(let i of this.likedUserIdList){
-                    if(i.UID == this.$store.state.signup.user.uid){
+                    if(i.UID == this.$store.state.signup.user.UID){
                     this.addedLiked = true
                     }
                 }
@@ -604,7 +604,7 @@ export default {
                 for(let answerId in this.answerDict){
                     // console.log(Array.isArray(this.answerDict[answerId].likedUsers))
                     for( let user of this.answerDict[answerId].likedUsers[0]){
-                        if(user == this.$store.state.signup.user.uid){
+                        if(user == this.$store.state.signup.user.UID){
                             this.answerDict[answerId].addedAnswerLiked = true
                         }
                     }
@@ -613,9 +613,9 @@ export default {
         },
         favoriteCheck(){
             try{
-                if(this.$store.state.signup.djangoUser.favorite_question[0]){
+                if(this.$store.state.signup.user.favorite_question[0]){
                     this.addedFavorite = false
-                    for(let i of this.$store.state.signup.djangoUser.favorite_question[0].question){
+                    for(let i of this.$store.state.signup.user.favorite_question[0].question){
                         console.log('loop',this.addedFavorite,i,this.question.id)
                         if(this.question.id==i){
                             this.addedFavorite = true
@@ -663,7 +663,7 @@ export default {
                             on_answer: false,
                             on_reply: false
                         })
-                        this.$store.dispatch('getDjangoUser')
+                        this.$store.dispatch('getUserData')
                         this.$store.dispatch('getAnsweredQuestion')
                         console.log('done patch 2')
                     }
@@ -672,7 +672,7 @@ export default {
                             viewed: this.viewed + 1,
                             on_answer: false
                         })
-                        this.$store.dispatch('getDjangoUser')
+                        this.$store.dispatch('getUserData')
                         this.$store.dispatch('getAnsweredQuestion')
                         console.log('done patch answer')
                     }
@@ -682,7 +682,7 @@ export default {
                             viewed: this.viewed + 1,
                             on_reply: false
                         })
-                        this.$store.dispatch('getDjangoUser')
+                        this.$store.dispatch('getUserData')
                         this.$store.dispatch('getAnsweredQuestion')
                         console.log('done patch reply')
                     }
@@ -724,7 +724,7 @@ export default {
             if(this.user){
                 this.answerDict[answerId].liked_num += 1
                 this.answerDict[answerId].addedAnswerLiked = true
-                this.answerDict[answerId].likedUsers[0].push(this.$store.state.signup.user.uid)
+                this.answerDict[answerId].likedUsers[0].push(this.$store.state.signup.user.UID)
                 this.countUpLikedAnswer(answerId)
             }else{
                 this.handleShowNotLogin()

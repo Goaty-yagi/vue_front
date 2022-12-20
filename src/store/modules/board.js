@@ -26,7 +26,7 @@ export default {
     },
     getters:{
         user(state, getters, rootState){
-            return rootState.signup.djangoUser
+            return rootState.signup.user
         },
         gettersAnsweredQuestions(state){
             return state.answeredQuestion
@@ -148,7 +148,7 @@ export default {
         // },
         setReccomendedQuestion(state, payload){
             state.reccomendedQuestion = payload
-            console.log('set-reccomendedQuestion')
+            console.log('set-reccomendedQuestion', state.reccomendedQuestion)
         },
         setRelatedQuestion(state, payload){
             state.relatedQuestion = payload

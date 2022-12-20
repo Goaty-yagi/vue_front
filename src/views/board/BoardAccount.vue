@@ -178,7 +178,7 @@ export default {
     },
     computed:{
         user(){
-            return this.$store.getters.getDjangouser
+            return this.$store.getters.getUser
         },
         // notifications(){
         //     return this.$store.getters.notifications

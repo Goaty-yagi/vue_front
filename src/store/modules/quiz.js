@@ -58,21 +58,21 @@ export default {
         questionTypeId:(state) => state.questionTypeId,
         quizTaker(state, getters, rootState){
             try{
-                return rootState.signup.djangoUser.quiz_taker[0].id
+                return rootState.signup.user.quiz_taker[0].id
             }catch{
                 return null
             }
         },
         quizTakerObject(state, getters, rootState){
             try{
-                return rootState.signup.djangoUser.quiz_taker[0]
+                return rootState.signup.user.quiz_taker[0]
             }catch{
                 return null
             }
         },
         quizID(state, getters, rootState){
             try{
-                return rootState.signup.djangoUser.quiz_taker[0].grade
+                return rootState.signup.user.quiz_taker[0].grade
             }catch{
                 return null
             }

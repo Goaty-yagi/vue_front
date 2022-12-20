@@ -73,7 +73,7 @@ export default {
                 data: {
                     title: this.$store.state.board.title,
                     description: this.$store.state.board.description,
-                    user: this.$store.state.signup.user.uid,
+                    user: this.$store.state.signup.user.UID,
                     slug: this.uuid,
                     liked_num:{},
                     tag: this.getTagId()

@@ -6,7 +6,7 @@
                 <!-- <i class="fas fa-cog"></i> -->
                 <div class="lds-dual-ring"></div>
             </div>
-            <div class="community-container" v-if="$store.state.isLoading==false">
+            <div class="community-container" v-if="handleQuestions">
                 <div class="header-flex">
                     <h1 class='title-white'>質問板</h1>
                     <i v-if="emailVerified" @click="goAccount()" class="fas fa-user user-font"></i>
@@ -101,6 +101,7 @@
                     v-bind:key="questionindex"
                     >
                         <div class='question-list' v-if='showQuestionStatus.search==false' @click="getDetail(question.slug)">
+                            
                             <div 
                             class="tag-wrapper">
                                 <div 
@@ -195,11 +196,11 @@ export default {
     created(){
         console.log('created')
         // this.$store.dispatch('getAnsweredQuestion')
-        this.$store.dispatch('getDjangoUser')
+        // this.$store.dispatch('getDjangoUser')
         // this.$store.dispatch('getNotificationApi')
     },
-    beforeMount(){
-        // this.getQuestion()
+    async beforeMount(){
+        await this.getQuestion()
         console.log('before-mounted')
         this.$store.dispatch('getNotificationApi')
     },
@@ -211,7 +212,6 @@ export default {
         this.scrollTop()
         this.handleOnAnswerOrReply()
         this.$store.dispatch('getRelatedQuestion')
-        this.getQuestion()
         this.showEmailVerified = false
         this.$store.commit('showModalFalse')
         this.$store.commit('fixedScrollFalse')
@@ -232,11 +232,11 @@ export default {
     //     },
     computed:{
         user(){
-            return this.$store.state.signup.djangoUser
-        },
-        roginUser(){
             return this.$store.state.signup.user
         },
+        // roginUser(){
+        //     return this.$store.state.signup.user
+        // },
         notification(){
             return 
         },
@@ -250,9 +250,10 @@ export default {
             return this.$store.getters.fixedScroll
         },
         handleQuestions(){
-            console.log("in handlequestion")
+            console.log("in handlequestion", this.showQuestionStatus)
             if(this.showQuestionStatus.recent){
                 this.questions = this.temporaryQuestion
+                console.log(this.questions)
                 return this.questions.results
             }
             else if(this.showQuestionStatus.reccomend){
@@ -269,10 +270,12 @@ export default {
     methods: {
         async getQuestion() {
             this.$store.commit('setIsLoading', true)
+            console.log("GQ")
             await axios
                 .get('/api/board/question/list')
                 .then(response => {
                     this.temporaryQuestion = response.data
+                    console.log("SER_QUESTION", this.temporaryQuestion)
                 })
                 .catch(e => {
                 let logger = {
@@ -342,6 +345,7 @@ export default {
         },
         async getSearchQuestion(){
             this.$store.commit('setIsLoading', true)
+            console.log('WL',this.wordList)
             await axios
                 .get(`/api/board/question/search/?keyword=${this.wordList}`)
                 .then(response => {
@@ -395,12 +399,12 @@ export default {
         },
         handleShowCreateQuestion(){
             console.log('showCreate')
-            if(this.emailVerified&&this.roginUser){
+            if(this.emailVerified&&this.user){
                 this.showCreateQuestion = !this.showCreateQuestion
                 this.$store.commit('handleFixedScroll')
                 // this.handleScrollFixed()
                 // this.a()
-            }else if(!this.emailVerified&&this.roginUser){
+            }else if(!this.emailVerified&&this.user){
                 this.handleShowEmailVerified()
                 this.$store.commit('fixedScrollTrue')
                 this.$store.commit('showModalTrue')
