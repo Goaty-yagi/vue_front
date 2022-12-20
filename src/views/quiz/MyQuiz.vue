@@ -103,10 +103,10 @@ export default {
     },
     computed:{
         user(){
-            return this.$store.state.signup.djangoUser
+            return this.$store.state.signup.user
         },
         myQuiz(){
-            return this.$store.state.signup.djangoUser.my_quiz[0]
+            return this.$store.state.signup.user.my_quiz[0]
         },
         length(){
             // length = this.$store.state.signup.djangoUser.my_quiz[0].my_question
