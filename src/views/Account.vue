@@ -80,7 +80,7 @@
                         </div>
                     </div>
                     <chart
-                    v-if="gotInfo"
+                    
                     :chart-data="chartData"
                     />
                 </div>
@@ -121,6 +121,7 @@ export default{
         const store = useStore()
         return{
             user: computed(() => store.state.signup.user),
+            quizTaker: computed(() => store.state.signup.user.quiz_taker[0]),
             email: computed(() => store.state.signup.email),
             password: computed(() => store.state.signup.password),
             emailVerified: computed(() => store.state.signup.emailVerified),
@@ -131,7 +132,7 @@ export default{
             showSent:false,
             error:'',
             userData:'',
-            quizTaker:'',
+            // quizTaker:'',
             showThumbnail:false,
             currentPageName:'',
             // showEmailVerified:true,
@@ -216,12 +217,13 @@ export default{
         
     mounted(){
         this.$store.commit('fixedScrollFalse')
-        console.log('account mounted',this.quizTakerObject,this.user)
+        console.log('account mounted',this.quizTakerObject,this.quizTaker.level)
         this.scrollFixedForUnmailverified()
         window.addEventListener('resize', this.getWidth)
         this.currentPageName = ''
         // this.patchImage()
         this.getCurrentPageName()
+        this.handleStatusParameter(this.quizTaker.grade)
         // this.handleShowEmailVerified()
     },
     beforeUnmount(){
@@ -298,7 +300,7 @@ export default{
             try{
                 await this.$store.dispatch('sendEmailVerify')
                 this.handleShowSent()
-                console.log('showsent:',this.showSent)
+
             }catch(err){
                 this.error = err
                 console.log(this.error)
@@ -360,6 +362,7 @@ export default{
             this.chartData.datasets[0].data = tempArray
             this.chartData.datasets[0].backgroundColor = this.backgroundColorList[this.getCurrentGradeNameFromIds(grade)]
             this.gotInfo = true
+            console.log("chart_data",this.chartData)
         },
         getCurrentStatusGrade(grade){
             if(this.currentStatusGrade==grade){
@@ -398,7 +401,9 @@ export default{
             this.stop = !this.stop
         },
         showChartHeaderGrade(grade){
+            console.log("grade",grade, this.grade[grade],this.grade[this.quizTaker.max_grade])
             if(this.grade[grade] <= this.grade[this.quizTaker.max_grade]){
+                console.log("return TRUE")
                 return true   
             }
             else{

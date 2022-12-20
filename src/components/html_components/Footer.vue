@@ -30,7 +30,9 @@
 
 <script>
 import {router} from "/src/main.js"
+
 export default {
+    
     data(){
         return{
             tweetUrl:'',
@@ -49,7 +51,8 @@ export default {
                 '運営':[
                     '運営会社'
                 ]
-            }
+            },
+            // authIsReady: this.$store.state.signup.authIsReady
         }
     },
     methods:{
